@@ -69,10 +69,10 @@ class _ScanScreenState extends State<ScanScreen> {
                     children: [
 
                       /// ❌ Close button
-                      // GestureDetector(
-                      //   onTap: () => Navigator.pop(context),
-                      //   child: const Icon(Icons.close, color: Colors.white, size: 30),
-                      // ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(Icons.close, color: Colors.white, size: 30),
+                      ),
 
                       const Text(
                         "Scan NAFDAC Code",
