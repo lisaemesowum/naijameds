@@ -18,7 +18,6 @@ class _DashboardScreeenState extends State<DashboardScreeen> {
   List screen = [
     HomeScreen(),
     SearchScreen(),
-    ReportsScreen(),
     ScanScreen(),
     MapScreen(),
     ProfileScreen(),
@@ -76,13 +75,13 @@ class _DashboardScreeenState extends State<DashboardScreeen> {
                 icon: Icon(Icons.search),
                 label: "Search",
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.report),
-                label: "Reports",
-              ),
+              // BottomNavigationBarItem(
+              //   icon: Icon(Icons.report),
+              //   label: "Reports",
+              // ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.qr_code_scanner),
-                label: "Scan",
+                label: "Drug Scan",
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.map),
