@@ -23,7 +23,12 @@ class _ChatScreenState extends State<ChatScreen> {
       "time": "10:02 AM"
     },
     {
-      "image": "https://via.placeholder.com/150", // Placeholder for prescription image
+      "text": "I've attached the prescription below.",
+      "isMe": true,
+      "time": "10:02 AM"
+    },
+    {
+      "image": "assets/splash/Amatem.webp", 
       "isMe": true,
       "time": "10:02 AM"
     },
@@ -32,60 +37,101 @@ class _ChatScreenState extends State<ChatScreen> {
       "isMe": false,
       "time": "10:05 AM"
     },
+    {
+      "text": "Yes, we have Coartem 80/480mg in stock at our Lekki branch. Would you like to reserve it?",
+      "isMe": false,
+      "time": "10:06 AM"
+    },
   ];
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F5),
       appBar: AppBar(
-        backgroundColor: Colors.teal.shade700,
-        leadingWidth: 70,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 0),
-          child: Row(
-            children: [
-              InkWell(
-                onTap: () => Navigator.pop(context),
-                child: const Icon(Icons.arrow_back, ),
-              ),
-              const SizedBox(width: 5),
-              const CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.white24,
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-            ],
-          ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        leadingWidth: 40,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              "HealthCare Pharmacy ✔️",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+        title: Row(
+          children: [
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: const Color(0xFF4FB062).withOpacity(0.1),
+                  child: const Icon(Icons.person, color: Color(0xFF4FB062)),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    height: 12,
+                    width: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Text(
-              "Online",
-              style: TextStyle(fontSize: 12, color: Colors.lightGreenAccent),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Text(
+                        "HealthCare Pharmacist",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2A6074)),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.verified, size: 14, color: Colors.blue),
+                    ],
+                  ),
+                  const Text(
+                    "HealthCare Pharmacy • Online",
+                    style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
+        // call area
         actions: [
           IconButton(
-            icon: const Icon(Icons.call, color: Colors.white),
-            onPressed: () {}, // For Emergency drug locator call-ahead
+            icon: const Icon(Icons.call_outlined, color: Color(0xFF2A6074)),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Color(0xFF2A6074)),
+            onPressed: () {},
           ),
         ],
-      ),///////////////////////////////////////////////////////////////////////////
+      ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
-                return _buildMessageBubble(msg);
+                final bool isMe = msg['isMe'];
+                return _buildMessageBubble(msg, isMe);
               },
             ),
           ),
@@ -95,85 +141,138 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> msg) {
-    bool isMe = msg['isMe'];
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 5),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isMe ? Colors.teal.shade100 : Colors.grey.shade200,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(15),
-            topRight: const Radius.circular(15),
-            bottomLeft: Radius.circular(isMe ? 15 : 0),
-            bottomRight: Radius.circular(isMe ? 0 : 15),
-          ),
-        ),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (msg.containsKey('image'))
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(msg['image'], height: 150, width: 150, fit: BoxFit.cover),
+  Widget _buildMessageBubble(Map<String, dynamic> msg, bool isMe) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+            decoration: BoxDecoration(
+              color: isMe ? const Color(0xFF4FB062) : Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(20),
+                topRight: const Radius.circular(20),
+                bottomLeft: Radius.circular(isMe ? 20 : 0),
+                bottomRight: Radius.circular(isMe ? 0 : 20),
               ),
-            if (msg.containsKey('text'))
-              Text(
-                msg['text'],
-                style: const TextStyle(fontSize: 15),
-              ),
-            const SizedBox(height: 4),
-            Text(
-              msg['time'],
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (msg.containsKey('image'))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        msg['image'],
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 150,
+                          width: 150,
+                          color: Colors.grey.shade200,
+                          child: const Icon(Icons.broken_image_outlined, color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (msg.containsKey('text'))
+                  Text(
+                    msg['text'],
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: isMe ? Colors.white : Colors.black87,
+                      height: 1.4,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                msg['time'],
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+              ),
+              if (isMe) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.done_all, size: 14, color: Color(0xFF4FB062)),
+              ],
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.add_a_photo, color: Colors.teal),
-            onPressed: () {
-              // Logic for prescription upload================================================
-            },
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F0F0),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.add_circle_outline, color: Color(0xFF2A6074)),
+              onPressed: () {},
+            ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: "Type a message...",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F0F0),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  hintText: "Type a message...",
+                  hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                  border: InputBorder.none,
                 ),
-                fillColor: Colors.grey.shade100,
-                filled: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
               ),
             ),
           ),
-          const SizedBox(width: 5),
-          CircleAvatar(
-            backgroundColor: Colors.teal,
-            child: IconButton(
-              icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: () {
-                // Logic to send text ===================
-              },
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: () {
+              // Logic to send message
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color(0xFF4FB062),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
             ),
           ),
         ],

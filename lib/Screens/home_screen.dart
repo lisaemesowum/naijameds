@@ -220,13 +220,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Color(0xFF2A6074),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text("View All", style: TextStyle(color: Color(0xFF4FB062))),
-                        ),
+                        // TextButton(
+                        //   onPressed: () {},
+                        //   child: const Text("View All", style: TextStyle(color: Color(0xFF4FB062))),
+                        // ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 14),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -243,13 +243,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatScreen())),
                         ),
                         _buildServiceItem(
-                          icon: Icons.history_rounded,
+                          icon: Icons.manage_history_rounded,
                           label: "History",
                           color: Colors.purple,
                           onTap: () {},
                         ),
                         _buildServiceItem(
-                          icon: Icons.emergency_outlined,
+                          icon: Icons.emergency_recording,
                           label: "Emergency",
                           color: Colors.red,
                           onTap: () {},
