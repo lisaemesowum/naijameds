@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:naijameds/Screens/home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -145,7 +147,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     height: 55,
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () async {
+                        final confirm = await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text("Logout"),
+                            content: const Text("Are you sure you want to logout?"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text("Logout"),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          await FirebaseAuth.instance.signOut();
+                        }
+                        // go back to Home (guest state handled by StreamBuilder)
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const HomeScreen()),
+                              (route) => false,
+                        );
+                      },
                       icon: const Icon(Icons.logout_rounded, color: Colors.red),
                       label: const Text(
                         "Logout",

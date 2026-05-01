@@ -121,7 +121,8 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () {},
           ),
         ],
-      ),
+      ),//===================================appbar ============================
+      // body where the chat will be
       body: Column(
         children: [
           Expanded(

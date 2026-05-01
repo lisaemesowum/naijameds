@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "509021859724",
+    "project_id": "naijameds",
+    "storage_bucket": "naijameds.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509021859724:android:2f7cd04346f14777c7b0a9",
+        "android_client_info": {
+          "package_name": "com.example.naijameds"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAevHqc6GvDomhDR0cMkNuJsofla6hTfSY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

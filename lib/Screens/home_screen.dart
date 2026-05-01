@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:naijameds/Screens/auth_screen.dart';
 import 'package:naijameds/Screens/chat_screen.dart';
+import 'package:naijameds/Screens/history_screen.dart';
 import 'package:naijameds/Screens/reports_screen.dart';
 import 'package:naijameds/Screens/scan_screen.dart';
 import 'package:naijameds/Screens/search_screen.dart';
+import 'package:naijameds/utils/auth_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,6 +13,7 @@ class HomeScreen extends StatefulWidget {
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
+
 
 class _HomeScreenState extends State<HomeScreen> {
   @override
@@ -220,10 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Color(0xFF2A6074),
                           ),
                         ),
-                        // TextButton(
-                        //   onPressed: () {},
-                        //   child: const Text("View All", style: TextStyle(color: Color(0xFF4FB062))),
-                        // ),
                       ],
                     ),
                     const SizedBox(height: 14),
@@ -234,19 +234,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.report_problem,
                           label: "Report Fake",
                           color: Colors.red,
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportsScreen())),
-                        ),
+                        onTap: () => navigateProtected(context, const ReportsScreen() as int),
+                         ),
+
                         _buildServiceItem(
                           icon: Icons.forum,
                           label: "Consultant",
                           color: Colors.blue,
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatScreen())),
+                          onTap: () => navigateProtected(context, const ChatScreen() as int),
                         ),
                         _buildServiceItem(
                           icon: Icons.manage_history_rounded,
                           label: "History",
                           color: Colors.purple,
-                          onTap: () {},
+                          onTap: ()  => navigateProtected(context, const HistoryScreen() as int),  //
                         ),
                         _buildServiceItem(
                           icon: Icons.emergency_recording,
