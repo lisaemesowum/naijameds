@@ -49,6 +49,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.2"
+  cloud_firestore:
+    dependency: "direct main"
+    description:
+      name: cloud_firestore
+      sha256: "3ac242332166ae5037bd87bc343744bb96d88d7b13f791492b00958ce5cc6c63"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.3.0"
+  cloud_firestore_platform_interface:
+    dependency: transitive
+    description:
+      name: cloud_firestore_platform_interface
+      sha256: "1bd08b736e1015e8bf5448f5ef67b2087a2380c2c1c7972f8403c1c7b41f5359"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.0"
+  cloud_firestore_web:
+    dependency: transitive
+    description:
+      name: cloud_firestore_web
+      sha256: "18617275ffa2331d3ea058c515ef218bcce2ae13a14bee922563ca6ae2507c26"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.3.0"
   collection:
     dependency: transitive
     description:
@@ -340,10 +364,10 @@ packages:
     dependency: transitive
     description:
       name: google_maps_flutter_web
-      sha256: "6cefe4ef4cc61dc0dfba4c413dec4bd105cb6b9461bfbe1465ddd09f80af377d"
+      sha256: "9b068070bf18b5ec6a7d8ac512c7d557377dbe267658d264d2095b7ee4f1f6c5"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.2"
+    version: "0.6.2+1"
   gsettings:
     dependency: transitive
     description:

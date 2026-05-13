@@ -139,6 +139,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: "Version and legal info",
                     color: Colors.grey,
                   ),
+                  // actions: [
+                  //
+                  //   IconButton(
+                  //
+                  //     icon: const Icon(Icons.shopping_cart),
+                  //
+                  //     onPressed: () {
+                  //
+                  //       Navigator.push(
+                  //         context,
+                  //         MaterialPageRoute(
+                  //           builder: (_) => const CartScreen(),
+                  //         ),
+                  //       );
+                  //
+                  //     },
+                  //   ),
+                  //
+                  // ],
 
                   const SizedBox(height: 30),
                   
