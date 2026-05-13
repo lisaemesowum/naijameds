@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 31),
 
               // 4. Quick Services Grid
               Padding(
@@ -234,20 +234,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.report_problem,
                           label: "Report Fake",
                           color: Colors.red,
-                        onTap: () => navigateProtected(context, const ReportsScreen() as int),
+                          onTap: () => navigateProtected(context, screen: const ReportsScreen()),
                          ),
 
                         _buildServiceItem(
                           icon: Icons.forum,
                           label: "Consultant",
                           color: Colors.blue,
-                          onTap: () => navigateProtected(context, const ChatScreen() as int),
+                          onTap: () => navigateProtected(context, screen: const ChatScreen()),
                         ),
                         _buildServiceItem(
                           icon: Icons.manage_history_rounded,
                           label: "History",
                           color: Colors.purple,
-                          onTap: ()  => navigateProtected(context, const HistoryScreen() as int),  //
+                          onTap: ()  => navigateProtected(context, screen: const HistoryScreen()),
                         ),
                         _buildServiceItem(
                           icon: Icons.emergency_recording,

@@ -8,6 +8,8 @@ class FirestoreService {
         // the firestore collection
         final CollectionReference medicationRef = FirebaseFirestore.instance.collection("medications");
 
+        final _db = FirebaseFirestore.instance; // instance of firestore
+
         // search medications from firebase
         Future <List<Medication>> searchMedications(String query) async {
         //   get matching medication
@@ -31,4 +33,11 @@ class FirestoreService {
         //
         //   return snapshot.docs.map((doc) => Medication.fromFirestore(doc as Map<String, dynamic>)).toList();
         // }
+//         save message
+      Future<void> saveMessage(Map<String, dynamic> message) async {
+           await _db.collection('messages').add({
+             ...message,
+             "createdAt": FieldValue.serverTimestamp(),
+           })  ;
+      }
 }

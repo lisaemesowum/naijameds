@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:naijameds/dashboard/dashboard_screeen.dart';
 
 class AuthScreen extends StatefulWidget {
-  // final Widget nextScreen;
   final int? tabIndex;
+  final Widget? nextScreen;
 
   const AuthScreen({
     super.key,
-    // required this.nextScreen,
     this.tabIndex,
+    this.nextScreen,
   });
 
   @override
@@ -33,22 +33,20 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return; // validate form return stops the function
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() {
-      _isLoading = true; //show loading spinner
+      _isLoading = true;
     });
 
-    try { //running the code
-      if (_isLogin) { // if login is true
-        // LOGIN
-        await FirebaseAuth.instance.signInWithEmailAndPassword( // sign in with email and password
+    try {
+      if (_isLogin) {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
       } else {
-        // SIGN UP
-        UserCredential userCredential = // create user with email and password and display name
+        UserCredential userCredential =
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -58,28 +56,25 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
 
-      // if (mounted) {
-      //   // FIX STARTS HERE:
-      //   // Instead of always going to HomeScreen, we go to the requested screen.
-      //   // We use pushReplacement so they can't "back" into the login screen.
-      //   Navigator.pushReplacement(
-      //     context,
-      //     MaterialPageRoute(builder: (_) => widget.nextScreen),
-      //   );
-      // }
-      if(mounted){
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DashboardScreeen(
-              initialIndex: widget.tabIndex ?? 0,
+      if (mounted) {
+        if (widget.nextScreen != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => widget.nextScreen!),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DashboardScreeen(
+                initialIndex: widget.tabIndex ?? 0,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     } on FirebaseAuthException catch (e) {
       String message = "Authentication failed";
-      // friendly message.
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {
         message = "Invalid email or password";
       } else if (e.code == 'email-already-in-use') {
@@ -90,7 +85,6 @@ class _AuthScreenState extends State<AuthScreen> {
         message = e.message!;
       }
 
-      // display the error at bottom of screen
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -138,8 +132,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 40),
-              
-              if (!_isLogin)...[
+              if (!_isLogin) ...[
                 _buildInputField(
                   controller: _nameController,
                   label: "Full Name",
@@ -149,7 +142,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 20),
               ],
-              
               _buildInputField(
                 controller: _emailController,
                 label: "Email Address",
@@ -159,7 +151,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 validator: (value) => !value!.contains("@") ? "Enter a valid email" : null,
               ),
               const SizedBox(height: 20),
-              
               _buildInputField(
                 controller: _passwordController,
                 label: "Password",
@@ -168,7 +159,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 isPassword: true,
                 validator: (value) => value!.length < 6 ? "Password too short" : null,
               ),
-              
               if (_isLogin)
                 Align(
                   alignment: Alignment.centerRight,
@@ -180,14 +170,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ),
-              
               const SizedBox(height: 30),
-              
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: _isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4FB062),
                     shape: RoundedRectangleBorder(
@@ -195,15 +183,15 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: Text(
-                    _isLogin ? "Login" : "Sign Up",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          _isLogin ? "Login" : "Sign Up",
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                 ),
               ),
-              
               const SizedBox(height: 20),
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -227,7 +215,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ],
               ),
-              
               const SizedBox(height: 40),
               Row(
                 children: [
@@ -240,7 +227,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 ],
               ),
               const SizedBox(height: 30),
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -305,7 +291,7 @@ class _AuthScreenState extends State<AuthScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Center(
-          child: Icon(Icons.g_mobiledata, size: 40, color: Colors.grey), // Placeholder icon
+          child: Icon(Icons.g_mobiledata, size: 40, color: Colors.grey),
         ),
       ),
     );

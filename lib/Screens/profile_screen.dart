@@ -12,6 +12,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SingleChildScrollView(
@@ -73,8 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 60),
 
             // 2. User Info
-            const Text(
-              "Lisa Emesowum",
+             Text(
+             user?.displayName ?? "No Name",
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -82,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             Text(
-              "lisa.emesowum@example.com",
+              user?.email ?? "No Email",
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -111,28 +112,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: "Manage alerts and updates",
                     color: Colors.orange,
                   ),
-                  _buildSettingsTile(
-                    icon: Icons.security_outlined,
-                    title: "Privacy & Security",
-                    subtitle: "Password and data control",
-                    color: Colors.green,
-                  ),
+                  // _buildSettingsTile(
+                  //   icon: Icons.security_outlined,
+                  //   title: "Privacy & Security",
+                  //   subtitle: "Password and data control",
+                  //   color: Colors.green,
+                  // ),
                   
                   const SizedBox(height: 20),
                   _buildSectionTitle("App Settings"),
-                  const SizedBox(height: 10),
-                  _buildSettingsTile(
-                    icon: Icons.language_rounded,
-                    title: "Language",
-                    subtitle: "Change app language",
-                    color: Colors.purple,
-                  ),
-                  _buildSettingsTile(
-                    icon: Icons.help_outline_rounded,
-                    title: "Help Center",
-                    subtitle: "FAQs and support",
-                    color: Colors.teal,
-                  ),
+                  // const SizedBox(height: 10),
+                  // _buildSettingsTile(
+                  //   icon: Icons.language_rounded,
+                  //   title: "Language",
+                  //   subtitle: "Change app language",
+                  //   color: Colors.purple,
+                  // ),
+                  // _buildSettingsTile(
+                  //   icon: Icons.help_outline_rounded,
+                  //   title: "Help Center",
+                  //   subtitle: "FAQs and support",
+                  //   color: Colors.teal,
+                  // ),
                   _buildSettingsTile(
                     icon: Icons.info_outline_rounded,
                     title: "About App",
