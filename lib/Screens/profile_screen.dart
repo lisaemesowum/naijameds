@@ -108,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: "Update your personal details",
                     color: Colors.blue,
                     onTap:(){
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfile()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfileScreen()));
                     }
 
                   ),
@@ -117,6 +117,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: "Notifications",
                     subtitle: "Manage alerts and updates",
                     color: Colors.orange,
+                      onTap:(){
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfile()));
+                      }
+                  ),
+                  _buildSettingsTile(
+                      icon: Icons.notifications_none_rounded,
+                      title: "Medication Management",
+                      subtitle: "Add Medication Refill Tracker",
+                      color: Colors.orange,
                       onTap:(){
                         Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfile()));
                       }

@@ -116,5 +116,51 @@ Future<void> saveHistory({  required String drugName, required String code, requ
       "createdAt": FieldValue.serverTimestamp(),
     });
  }
+//  for the add medician =======
+  Future<void> addMedication({
+    required String medicationName,
+    required String dosage,
+    required String frequency,
+    required int quantity,
+    required String condition,
+    required DateTime startDate,
+    required DateTime refillDate,
+    required String reminderTime,
+    String? notes, // optional parameter for notes
+    File? prescriptionImage, // optional parameter for prescription image
+  }) async {
+
+    String imageUrl = ""; // image url for prescription image
+
+    // Upload prescription image
+    if (prescriptionImage != null) { // if prescription image is not null then upload it to firebase storage
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString(); // generate file name
+
+      final ref = _storage // reference to firebase storage bucket and file name
+          .ref()
+          .child("prescriptions")
+          .child("$fileName.jpg");
+
+      await ref.putFile(prescriptionImage); // upload prescription image to firebase storage
+
+      imageUrl = await ref.getDownloadURL();
+    }
+
+    await _db.collection("user_medications").add({ // add medication to firebase firestore
+      "userId": _auth.currentUser?.uid,
+      "medicationName": medicationName,
+      "dosage": dosage,
+      "frequency": frequency,
+      "quantity": quantity,
+      "condition": condition,
+      "startDate": Timestamp.fromDate(startDate),
+      "refillDate": Timestamp.fromDate(refillDate),
+      "reminderTime": reminderTime,
+      "prescriptionImage": imageUrl,
+      "notes": notes ?? "",
+      "isActive": true,
+      "createdAt": FieldValue.serverTimestamp(),
+    });
+  }
 }
 
