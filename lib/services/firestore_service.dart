@@ -105,5 +105,16 @@ static Future<Map<String, dynamic>?> verifyDrug(String macCode) async { // funct
            return null;
          }
 } //================================handles drug verification================================================================================================
+
+// \\\\\\\\\\\\\\\\\\\\\for the save history=\\\\\\\\\\\\\\\\\
+Future<void> saveHistory({  required String drugName, required String code, required String status,})async{
+    await _db.collection("history").add({
+      "drugName": drugName,
+      "code": code,
+      "status": status,
+      "userId": _auth.currentUser?.uid,
+      "createdAt": FieldValue.serverTimestamp(),
+    });
+ }
 }
 
