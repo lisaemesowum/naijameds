@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:naijameds/services/firestore_service.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -10,11 +13,15 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // form key for validation 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+  final FirestoreService _firestoreService = FirestoreService(); // instance of firestore service
+  //  for loading 
+  bool _isLoading = false;
   
   File? _image;
   final ImagePicker _picker = ImagePicker();
@@ -291,11 +298,52 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _showSuccessDialog(context);
-                      }
+                    onPressed: () async {
+                     if(!_formKey.currentState!.validate()){ // if form is not valid 
+                       return;
+                     }
+                     setState((){
+                       _isLoading = true; // set loading to true
+                     }); 
+                     try{
+                       await _firestoreService.submitReport(
+                           drugName: _nameController.text.trim(),
+                           masCode: _codeController.text.trim(),
+                           location: _locationController.text.trim(), 
+                           description: _descController.text.trim(),
+                         image: _image,
+                      );
+                         if(context.mounted){ // if context is mounted 
+                           _showSuccessDialog(context);
+                         }
+                       // CLEAR FORM
+
+                       _nameController.clear();
+                       _codeController.clear();
+                       _descController.clear();
+                       _locationController.clear();
+
+                       setState(() {
+                         _image = null;
+                       });
+                     }catch (e) { // if error
+
+                       ScaffoldMessenger.of(context).showSnackBar( // show snack bar
+
+                         SnackBar(
+                           content: Text(
+                             "Error submitting report: $e",
+                           ),
+                         ),
+
+                       );
+                     }
+
+                     setState(() {
+                       _isLoading = false;
+                     });
                     },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4FB062),
                       shape: RoundedRectangleBorder(
@@ -303,7 +351,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: _isLoading ? const CircularProgressIndicator(
+                      color: Colors.white,
+                    ):const Text(
                       "Submit Report",
                       style: TextStyle(
                         fontSize: 18,

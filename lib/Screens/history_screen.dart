@@ -11,6 +11,13 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      appBar:AppBar(
+        backgroundColor: Colors.white,
+        title: const Text("History"),
+        centerTitle: true,
+
+      ) ,
+    );
   }
 }

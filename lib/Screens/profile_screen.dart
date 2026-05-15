@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:naijameds/Screens/about_app_screen.dart';
+import 'package:naijameds/Screens/edit_profile.dart';
 import 'package:naijameds/Screens/home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -105,12 +107,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: "Edit Profile",
                     subtitle: "Update your personal details",
                     color: Colors.blue,
+                    onTap:(){
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfile()));
+                    }
+
                   ),
                   _buildSettingsTile(
                     icon: Icons.notifications_none_rounded,
                     title: "Notifications",
                     subtitle: "Manage alerts and updates",
                     color: Colors.orange,
+                      onTap:(){
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfile()));
+                      }
                   ),
                   // _buildSettingsTile(
                   //   icon: Icons.security_outlined,
@@ -139,6 +148,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: "About App",
                     subtitle: "Version and legal info",
                     color: Colors.grey,
+                      onTap:(){
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const AboutAppScreen()));
+                      }
                   ),
                   // actions: [
                   //
@@ -240,6 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required String subtitle,
     required Color color,
+    required VoidCallback onTap,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -280,7 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
-        onTap: () {},
+        onTap: onTap,
       ),
     );
   }

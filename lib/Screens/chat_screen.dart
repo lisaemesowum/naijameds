@@ -451,17 +451,17 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           // ================= CHAT LIST =================
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
+            child: ListView.builder( // list view builder
+              controller: _scrollController, // scroll controller for the list
               padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
+              itemCount: _messages.length, // number of messages
               itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isMe = msg["isMe"] ?? false;
-
+                final msg = _messages[index]; // message
+                final isMe = msg["isMe"] ?? false; // is the message sent by the user
+                //  ================= MESSAGE BUBBLE =================
                 return Align(
                   alignment:
-                  isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  isMe ? Alignment.centerRight : Alignment.centerLeft, // align the message to the right if the user sent it
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(12),
@@ -481,11 +481,11 @@ class _ChatScreenState extends State<ChatScreen> {
                             padding: const EdgeInsets.only(bottom: 8),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.file(File(msg["image"]), width: double.infinity, fit: BoxFit.cover),
+                              child: Image.file(File(msg["image"]), width: double.infinity, fit: BoxFit.cover), // image
                             ),
                           ),
 
-                        if (msg.containsKey("text"))
+                        if (msg.containsKey("text")) // if the message is text
                           Text(
                             msg["text"],
                             style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 15, height: 1.3),
@@ -493,7 +493,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         const SizedBox(height: 5),
 
                         Text(
-                          msg["time"],
+                          msg["time"], //
                           style: TextStyle(
                             fontSize: 10,
                             color:
@@ -541,9 +541,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     //   ),
                     // ),
                     child: TextField(
-                      controller: _messageController,
+                      controller: _messageController, // controller for the text field
                       onSubmitted: (_) => SendMessage(),
-                      decoration: const InputDecoration(hintText: "Ask about a drug...", border: InputBorder.none, hintStyle: TextStyle(fontSize: 14)),
+                      decoration: const InputDecoration(hintText: "Ask about any drug...", border: InputBorder.none, hintStyle: TextStyle(fontSize: 14)),
                     ),
                   ),
                 ),
