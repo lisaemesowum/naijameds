@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:naijameds/Screens/about_app_screen.dart';
+import 'package:naijameds/Screens/add_medication_screen.dart';
 import 'package:naijameds/Screens/edit_profile.dart';
 import 'package:naijameds/Screens/home_screen.dart';
+import 'package:naijameds/Screens/notification_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -118,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: "Manage alerts and updates",
                     color: Colors.orange,
                       onTap:(){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfile()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const NotificationScreen()));
                       }
                   ),
                   _buildSettingsTile(
@@ -127,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       subtitle: "Add Medication Refill Tracker",
                       color: Colors.orange,
                       onTap:(){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const EditProfile()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const AddMedicationScreen()));
                       }
                   ),
                   // _buildSettingsTile(
