@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:naijameds/services/notification_service.dart';
 import '../services/firestore_service.dart';
 
 class AddMedicationScreen extends StatefulWidget {
@@ -50,6 +51,12 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     });
 
     try {
+      int quantity = int.parse(quantityController.text); //
+
+      // Auto refill calculation
+      DateTime refillDate = startDate.add(Duration(days: quantity),);
+
+      int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000; // generate notification id for reminder
 
       await FirestoreService().addMedication(
         medicationName: medicationController.text.trim(),
@@ -61,9 +68,33 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         refillDate: refillDate,
         reminderTime:
         reminderTime.format(context),
+        notificationId:
+        notificationId,
         notes: notesController.text.trim(),
         prescriptionImage: prescriptionImage,
       );
+      // Schedule reminder
+      await NotificationService
+          .scheduleMedicationReminder(
+
+        id: notificationId,
+
+        title:
+        "Medication Reminder",
+
+        body:
+        "Time to take ${medicationController.text}",
+
+        scheduledTime: DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+          reminderTime.hour,
+          reminderTime.minute,
+        ),
+      );
+
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -197,6 +228,46 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
               ),
 
               const SizedBox(height: 16),
+
+            ListTile(
+
+                contentPadding:
+                EdgeInsets.zero,
+
+                title: const Text(
+                  "Reminder Time",
+                ),
+
+                subtitle: Text(
+                  reminderTime.format(
+                      context),
+                ),
+
+                trailing: const Icon(
+                  Icons.access_time,
+                ),
+
+                onTap: () async {
+
+                  final picked =
+                  await showTimePicker(
+
+                    context: context,
+
+                    initialTime:
+                    reminderTime,
+                  );
+
+                  if (picked != null) {
+
+                    setState(() {
+                      reminderTime =
+                          picked;
+                    });
+                  }
+                },
+            ),
+              const SizedBox(height: 17),
 
               TextFormField(
                 controller: notesController,

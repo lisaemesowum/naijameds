@@ -126,6 +126,7 @@ Future<void> saveHistory({  required String drugName, required String code, requ
     required DateTime startDate,
     required DateTime refillDate,
     required String reminderTime,
+    required int notificationId,
     String? notes, // optional parameter for notes
     File? prescriptionImage, // optional parameter for prescription image
   }) async {
@@ -156,11 +157,33 @@ Future<void> saveHistory({  required String drugName, required String code, requ
       "startDate": Timestamp.fromDate(startDate),
       "refillDate": Timestamp.fromDate(refillDate),
       "reminderTime": reminderTime,
+      "notificationId": notificationId,
       "prescriptionImage": imageUrl,
       "notes": notes ?? "",
       "isActive": true,
       "createdAt": FieldValue.serverTimestamp(),
     });
+  }
+//
+  Future<void> updateMedication({
+    required String docId,
+    required Map<String, dynamic> data,
+  }) async {
+
+    await _db
+        .collection("user_medications")
+        .doc(docId)
+        .update(data);
+  }
+
+  Future<void> deleteMedication({
+    required String docId,
+  }) async {
+
+    await _db
+        .collection("user_medications")
+        .doc(docId)
+        .delete();
   }
 }
 

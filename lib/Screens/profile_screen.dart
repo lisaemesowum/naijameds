@@ -4,6 +4,7 @@ import 'package:naijameds/Screens/about_app_screen.dart';
 import 'package:naijameds/Screens/add_medication_screen.dart';
 import 'package:naijameds/Screens/edit_profile.dart';
 import 'package:naijameds/Screens/home_screen.dart';
+import 'package:naijameds/Screens/medication_list_screen.dart';
 import 'package:naijameds/Screens/notification_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -116,11 +117,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   _buildSettingsTile(
                     icon: Icons.notifications_none_rounded,
-                    title: "Notifications",
-                    subtitle: "Manage alerts and updates",
+                    title: "Medication List",
+                    subtitle: "View Medication List",
                     color: Colors.orange,
                       onTap:(){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const NotificationScreen()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const MedicationListScreen()));
                       }
                   ),
                   _buildSettingsTile(

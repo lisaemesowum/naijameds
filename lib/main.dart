@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:naijameds/firebase_options.dart';
+import 'package:naijameds/services/notification_service.dart';
 import 'package:naijameds/splashScreens/splash_screen1.dart';
 import 'package:naijameds/splashScreens/splash_screen3.dart';
 import 'package:firebase_ai/firebase_ai.dart';
@@ -13,6 +14,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await NotificationService.initialize();
 
   runApp(const MyApp());
 }
