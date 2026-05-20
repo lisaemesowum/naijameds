@@ -1,9 +1,11 @@
 import 'dart:io';
-import 'package:firebase_core/firebase_core.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:naijameds/services/firestore_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -13,19 +15,19 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  final _formKey = GlobalKey<FormState>(); // form key for validation 
+  final _formKey = GlobalKey<FormState>(); // form key for validation
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final ImagePicker _imagePicker = ImagePicker();
-  final FirestoreService _firestoreService = FirestoreService(); // instance of firestore service
-  //  for loading 
-  bool _isLoading = false;
-  
+
+  bool _isLoading = false; // loading state
+
   File? _image;
   final ImagePicker _picker = ImagePicker();
 
+  // pick image from camera or gallery
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
@@ -34,6 +36,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         maxHeight: 1800,
         imageQuality: 85,
       );
+
       if (pickedFile != null) {
         setState(() {
           _image = File(pickedFile.path);
@@ -44,11 +47,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  // show image source bottom sheet
   void _showImageSourceActionSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
       ),
       builder: (context) => SafeArea(
         child: Column(
@@ -57,11 +63,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const ListTile(
               title: Text(
                 'Select Evidence Source',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.camera_alt, color: Color(0xFF4FB062)),
+              leading: const Icon(
+                Icons.camera_alt,
+                color: Color(0xFF4FB062),
+              ),
               title: const Text('Camera'),
               onTap: () {
                 Navigator.pop(context);
@@ -69,7 +80,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: Color(0xFF4FB062)),
+              leading: const Icon(
+                Icons.photo_library,
+                color: Color(0xFF4FB062),
+              ),
               title: const Text('Gallery'),
               onTap: () {
                 Navigator.pop(context);
@@ -82,6 +96,115 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
+  // get user live location
+  Future<Position> _getUserLocation() async {
+    bool serviceEnabled =
+    await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
+      throw Exception("Please enable location services");
+    }
+
+    LocationPermission permission =
+    await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied) {
+      throw Exception("Location permission denied");
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      await openAppSettings(); // opens phone settings
+      throw Exception(
+        "Location permanently denied. Please enable it in settings.",
+      );
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
+  // upload evidence image to firebase storage
+  Future<String?> _uploadImage() async {
+    if (_image == null) return null;
+
+    final fileName =
+    DateTime.now().millisecondsSinceEpoch.toString();
+
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child("drug_reports/$fileName.jpg");
+
+    await ref.putFile(_image!);
+
+    return await ref.getDownloadURL();
+  }
+
+  // submit report to firestore
+  Future<void> _submitReport() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // get current user gps
+      Position position = await _getUserLocation();
+
+      // upload image if available
+      String? imageUrl = await _uploadImage();
+
+      // save report to firestore
+      await FirebaseFirestore.instance
+          .collection("drug_reports")
+          .add({
+        "drugName": _nameController.text.trim(),
+        "masCode": _codeController.text.trim(),
+        "description": _descController.text.trim(),
+        "location": _locationController.text.trim(),
+        "latitude": position.latitude,
+        "longitude": position.longitude,
+        "imageUrl": imageUrl,
+        "status": "pending",
+        "timestamp":
+        FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      _showSuccessDialog();
+
+      // clear form
+      _nameController.clear();
+      _codeController.clear();
+      _descController.clear();
+      _locationController.clear();
+
+      setState(() {
+        _image = null;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error submitting report: $e",
+          ),
+        ),
+      );
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -91,284 +214,73 @@ class _ReportsScreenState extends State<ReportsScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          "Report All Fake Drug",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+  // success dialog
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius:
+            BorderRadius.circular(20),
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Alert
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.red.shade100),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline, color: Colors.red, size: 27),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              "PUBLIC SAFETY ALERT FOR ALL NIGERIANS",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                                fontSize: 15,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "Your report helps us identify and flag fake drug areas in Nigeria.",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Color(0xFF4FB062),
+                size: 80,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Report Submitted",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Thank you for helping keep our community safe. Our team will verify this report immediately.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                  style:
+                  ElevatedButton.styleFrom(
+                    backgroundColor:
+                    const Color(0xFF2A6074),
+                    shape:
+                    RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(
+                        12,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Drug Details
-                const Text(
-                  "Drug Details",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2A6074),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                _buildInputField(
-                  controller: _nameController,
-                  label: "Drug Name",
-                  hint: "e.g. Coartem 80/480mg",
-                  icon: Icons.medication_outlined,
-                  validator: (value) => value == null || value.isEmpty ? "Please enter drug name" : null,
-                ),
-                const SizedBox(height: 16),
-                
-                _buildInputField(
-                  controller: _codeController,
-                  label: "MAS Code / Scratch Code",
-                  hint: "Enter the 12-15 digit code",
-                  icon: Icons.qr_code_scanner_outlined,
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-
-                // Location Section
-                const Text(
-                  "Purchase Location",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2A6074),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                _buildInputField(
-                  controller: _locationController,
-                  label: "Pharmacy Name / Address",
-                  hint: "Where did you buy this?",
-                  icon: Icons.location_on_outlined,
-                  validator: (value) => value == null || value.isEmpty ? "Please enter location" : null,
-                ),
-                const SizedBox(height: 16),
-
-                // Description
-                const Text(
-                  "Incident Description",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2A6074),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildInputField(
-                  controller: _descController,
-                  label: "",
-                  hint: "Tell us why you suspect this drug is fake (e.g. no scratch panel, unusual packaging, side effects...)",
-                  maxLines: 4,
-                  validator: (value) => value == null || value.isEmpty ? "Please provide a description" : null,
-                ),
-                const SizedBox(height: 24),
-
-                // Photo Upload
-                const Text(
-                  "Evidence (Optional)",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2A6074),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                InkWell(
-                  onTap: () => _showImageSourceActionSheet(context),
-                  child: Container(
-                    height: 150,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
+                  child: const Text(
+                    "Done",
+                    style: TextStyle(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: _image != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.file(_image!, fit: BoxFit.cover),
-                                Positioned(
-                                  right: 8,
-                                  top: 8,
-                                  child: GestureDetector(
-                                    onTap: () => setState(() => _image = null),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.close, color: Colors.white, size: 16),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40),
-                              SizedBox(height: 8),
-                              Text(
-                                "Add Photo of Packaging",
-                                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-                              ),
-                              Text(
-                                "(Helpful for verification)",
-                                style: TextStyle(color: Colors.grey, fontSize: 12),
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Submit Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                     if(!_formKey.currentState!.validate()){ // if form is not valid 
-                       return;
-                     }
-                     setState((){
-                       _isLoading = true; // set loading to true
-                     }); 
-                     try{
-                       await _firestoreService.submitReport(
-                           drugName: _nameController.text.trim(),
-                           masCode: _codeController.text.trim(),
-                           location: _locationController.text.trim(), 
-                           description: _descController.text.trim(),
-                         image: _image,
-                      );
-                         if(context.mounted){ // if context is mounted 
-                           _showSuccessDialog(context);
-                         }
-                       // CLEAR FORM
-
-                       _nameController.clear();
-                       _codeController.clear();
-                       _descController.clear();
-                       _locationController.clear();
-
-                       setState(() {
-                         _image = null;
-                       });
-                     }catch (e) { // if error
-
-                       ScaffoldMessenger.of(context).showSnackBar( // show snack bar
-
-                         SnackBar(
-                           content: Text(
-                             "Error submitting report: $e",
-                           ),
-                         ),
-
-                       );
-                     }
-
-                     setState(() {
-                       _isLoading = false;
-                     });
-                    },
-
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4FB062),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    ):const Text(
-                      "Submit Report",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -377,12 +289,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
     required String label,
     required String hint,
     IconData? icon,
-    TextInputType keyboardType = TextInputType.text,
+    TextInputType keyboardType =
+        TextInputType.text,
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+      CrossAxisAlignment.start,
       children: [
         if (label.isNotEmpty) ...[
           Text(
@@ -402,26 +316,42 @@ class _ReportsScreenState extends State<ReportsScreen> {
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            prefixIcon: icon != null ? Icon(icon, color: const Color(0xFF4FB062), size: 22) : null,
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 14,
+            ),
+            prefixIcon: icon != null
+                ? Icon(
+              icon,
+              color:
+              const Color(0xFF4FB062),
+              size: 22,
+            )
+                : null,
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+            contentPadding:
+            const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF4FB062), width: 1.5),
+            enabledBorder:
+            OutlineInputBorder(
+              borderRadius:
+              BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Colors.grey.shade200,
+              ),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 1),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            focusedBorder:
+            OutlineInputBorder(
+              borderRadius:
+              BorderRadius.circular(12),
+              borderSide:
+              const BorderSide(
+                color: Color(0xFF4FB062),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -429,47 +359,144 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  void _showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor:
+      const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          "Report Fake Drug",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding:
+        const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
             children: [
-              const Icon(Icons.check_circle_outline, color: Color(0xFF4FB062), size: 80),
-              const SizedBox(height: 16),
-              const Text(
-                "Report Submitted",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              _buildInputField(
+                controller: _nameController,
+                label: "Drug Name",
+                hint: "Enter drug name",
+                icon:
+                Icons.medication_outlined,
+                validator: (value) =>
+                value == null ||
+                    value.isEmpty
+                    ? "Enter drug name"
+                    : null,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                "Thank you for helping keep our community safe. Our team will verify this report immediately.",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54),
+              const SizedBox(height: 16),
+
+              _buildInputField(
+                controller: _codeController,
+                label: "MAS Code",
+                hint: "Scratch code",
+                icon:
+                Icons.qr_code_scanner,
+              ),
+              const SizedBox(height: 16),
+
+              _buildInputField(
+                controller:
+                _locationController,
+                label:
+                "Pharmacy / Address",
+                hint:
+                "Where did you buy this?",
+                icon:
+                Icons.location_on_outlined,
+                validator: (value) =>
+                value == null ||
+                    value.isEmpty
+                    ? "Enter location"
+                    : null,
+              ),
+              const SizedBox(height: 16),
+
+              _buildInputField(
+                controller:
+                _descController,
+                label: "Description",
+                hint:
+                "Why do you suspect it is fake?",
+                maxLines: 4,
+                validator: (value) =>
+                value == null ||
+                    value.isEmpty
+                    ? "Provide description"
+                    : null,
+              ),
+              const SizedBox(height: 20),
+
+              InkWell(
+                onTap: () =>
+                    _showImageSourceActionSheet(
+                      context,
+                    ),
+                child: Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration:
+                  BoxDecoration(
+                    border: Border.all(
+                      color: Colors.grey
+                          .shade300,
+                    ),
+                    borderRadius:
+                    BorderRadius.circular(
+                        12),
+                  ),
+                  child: _image == null
+                      ? const Center(
+                    child: Text(
+                      "Upload Evidence Image",
+                    ),
+                  )
+                      : ClipRRect(
+                    borderRadius:
+                    BorderRadius
+                        .circular(
+                        12),
+                    child: Image.file(
+                      _image!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
+
               SizedBox(
                 width: double.infinity,
+                height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2A6074),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onPressed: _isLoading
+                      ? null
+                      : _submitReport,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                    color:
+                    Colors.white,
+                  )
+                      : const Text(
+                    "Submit Report",
                   ),
-                  child: const Text("Done", style: TextStyle(color: Colors.white)),
                 ),
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

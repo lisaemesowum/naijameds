@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+
+import '../services/map_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -9,274 +13,335 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // Initial camera position (Lagos, Nigeria)
-  static const CameraPosition _kLagos = CameraPosition(
-    target: LatLng(6.5244, 3.3792),
-    zoom: 14.4746,
-  );
-
-  bool _isHeatmapVisible = false;
+  LatLng? userLocation;
+  List<dynamic> places = [];
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 1. The Map
-          const GoogleMap(
-            initialCameraPosition: _kLagos,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapType: MapType.normal,
-          ),
+  void initState() {
+    super.initState();
+    loadMapData();
+  }
 
-          // 2. Custom Search and Filter Header
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    height: 55,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: Color(0xFF4FB062)),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: "Find pharmacies near you...",
-                              hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                              border: InputBorder.none,
-                            ),
-                          ),
-                        ),
-                        VerticalDivider(
-                          color: Colors.grey.shade300,
-                          indent: 15,
-                          endIndent: 15,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.tune_rounded, color: Color(0xFF2A6074)),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Hotspot Toggle
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ActionChip(
-                      onPressed: () {
-                        setState(() {
-                          _isHeatmapVisible = !_isHeatmapVisible;
-                        });
-                      },
-                      backgroundColor: _isHeatmapVisible ? Colors.red : Colors.white,
-                      avatar: Icon(
-                        Icons.warning_rounded,
-                        size: 16,
-                        color: _isHeatmapVisible ? Colors.white : Colors.red,
-                      ),
-                      label: Text(
-                        "Fake Drug Hotspots",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _isHeatmapVisible ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.red.withOpacity(0.2)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+  Future<void> loadMapData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      Position position = await _determinePosition();
+
+      userLocation = LatLng(
+        position.latitude,
+        position.longitude,
+      );
+
+      final results = await MapService().fetchNearbyPlaces(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (mounted) {
+        setState(() {
+          places = results;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          errorMessage = e.toString();
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => loadMapData(),
             ),
           ),
+        );
+      }
+    }
+  }
 
-          // 3. Floating Action Buttons (Right side)
-          Positioned(
-            right: 20,
-            bottom: 220,
-            child: Column(
-              children: [
-                _buildMapFab(Icons.my_location, () {}),
-                const SizedBox(height: 12),
-                _buildMapFab(Icons.layers_outlined, () {}),
-              ],
-            ),
-          ),
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Location services are disabled. Please enable them.');
+    }
 
-          // 4. Draggable Scrollable Sheet for Pharmacy Details
-          DraggableScrollableSheet(
-            initialChildSize: 0.25,
-            minChildSize: 0.15,
-            maxChildSize: 0.8,
-            builder: (context, scrollController) {
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 5),
-                  ],
-                ),
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Nearby Pharmacies",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2A6074)),
-                    ),
-                    const SizedBox(height: 15),
-                    _buildPharmacyItem(
-                      "HealthPlus Lekki",
-                      "Admiralty Way, Lekki Phase 1",
-                      "0.8 km",
-                      "Open • 24hrs",
-                      true,
-                    ),
-                    _buildPharmacyItem(
-                      "Medplus Pharmacy",
-                      "Ikeja City Mall, Ikeja",
-                      "1.2 km",
-                      "Open • Closes 10PM",
-                      true,
-                    ),
-                    _buildPharmacyItem(
-                      "Alpha Pharmacy",
-                      "Victoria Island, Lagos",
-                      "2.5 km",
-                      "Closed • Opens 8AM",
-                      false,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permissions are denied.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception(
+          'Location permissions are permanently denied. Please enable them in settings.'
+      );
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
     );
   }
 
-  Widget _buildMapFab(IconData icon, VoidCallback onTap) {
-    return Container(
-      height: 50,
-      width: 50,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+  void _showPlaceDetails(dynamic place) {
+    final tags = place['tags'] ?? {};
+    final name = tags['name'] ??
+        (tags['amenity']?.toString().toUpperCase() ?? 'Unknown Place');
+    final address = tags['addr:street'] != null
+        ? '${tags['addr:street']}, ${tags['addr:city'] ?? ''}'
+        : 'Address not available';
+    final phone = tags['phone'] ?? 'Not available';
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Icon(icon, color: const Color(0xFF2A6074)),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  tags['amenity'] == 'hospital'
+                      ? Icons.local_hospital
+                      : Icons.local_pharmacy,
+                  color: Colors.blue,
+                  size: 30,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (tags['amenity'] != null)
+              _buildInfoRow(Icons.category, 'Type: ${tags['amenity']}'),
+            _buildInfoRow(Icons.location_on, address),
+            _buildInfoRow(Icons.phone, 'Phone: $phone'),
+            if (tags['opening_hours'] != null)
+              _buildInfoRow(Icons.access_time, 'Hours: ${tags['opening_hours']}'),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+                label: const Text('Close'),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPharmacyItem(String name, String address, String distance, String status, bool inStock) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 50,
-            width: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFF4FB062).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.storefront_outlined, color: Color(0xFF4FB062)),
+          Icon(icon, size: 18, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading nearby places...'),
+            ],
           ),
-          const SizedBox(width: 15),
-          Expanded(
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Nearby Hospitals & Pharmacies'),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    if (inStock)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4FB062).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          "In Stock",
-                          style: TextStyle(color: Color(0xFF4FB062), fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                  ],
+                Icon(Icons.error_outline, size: 80, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
                 ),
-                const SizedBox(height: 4),
-                Text(address, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 14, color: Colors.grey.shade400),
-                    const SizedBox(width: 4),
-                    Text(distance, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                    const SizedBox(width: 15),
-                    Icon(Icons.access_time, size: 14, color: Colors.grey.shade400),
-                    const SizedBox(width: 4),
-                    Text(status, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  ],
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: loadMapData,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
                 ),
               ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (userLocation == null) {
+      return const Scaffold(
+        body: Center(child: Text('Unable to get location')),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Nearby Hospitals & Pharmacies'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: loadMapData,
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          FlutterMap(
+            options: MapOptions(
+              initialCenter: userLocation!,
+              initialZoom: 14,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all,
+              ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.yourcompany.yourapp',
+              ),
+              MarkerLayer(
+                markers: [
+                  // User location marker
+                  Marker(
+                    point: userLocation!,
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue.withOpacity(0.3),
+                        border: Border.all(
+                          color: Colors.blue,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.my_location,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  // Place markers
+                  ...places.where((place) =>
+                  place['lat'] != null && place['lon'] != null
+                  ).map((place) {
+                    final tags = place['tags'] ?? {};
+                    final isHospital = tags['amenity'] == 'hospital';
+
+                    return Marker(
+                      point: LatLng(
+                        double.parse(place['lat'].toString()),
+                        double.parse(place['lon'].toString()),
+                      ),
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      child: GestureDetector(
+                        onTap: () => _showPlaceDetails(place),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            isHospital ? Icons.local_hospital : Icons.local_pharmacy,
+                            color: isHospital ? Colors.red : Colors.green,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ],
+          ),
+          // Info badge showing number of places found
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              child: Text(
+                '${places.length} places found',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ),
         ],

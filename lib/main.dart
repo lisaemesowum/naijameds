@@ -29,7 +29,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'NaijaMeds',
       debugShowCheckedModeBanner: false,
-      home: DashboardScreeen()
+      // home: DashboardScreeen()
+      home:SplashScreen1()
     );
   }
 }

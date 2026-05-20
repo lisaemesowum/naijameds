@@ -51,10 +51,16 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     });
 
     try {
-      int quantity = int.parse(quantityController.text); //
+      int quantity = int.parse(quantityController.text); // parse quantity to int
+      int frequencyCount = getRegularCount();
 
       // Auto refill calculation
-      DateTime refillDate = startDate.add(Duration(days: quantity),);
+      // DateTime refillDate = startDate.add(Duration(days: quantity),);
+      int daysUntilRefill = (quantity / frequencyCount).floor(); // calculate days until refill
+
+      DateTime refillDate = startDate.add( // add days until refill to start date
+        Duration(days: daysUntilRefill),
+      );
 
       int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000; // generate notification id for reminder
 
@@ -119,6 +125,40 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       });
     }
   }
+  int getRegularCount() {
+    switch (frequency) {
+      case "Twice Daily":
+        return 2;
+      case "Three Times Daily":
+        return 3;
+      default:
+        return 1;
+    }
+  }
+  Future<void> scheduleReminders(
+      int baseId,
+      String medicationName,
+      ) async {
+    int regularCount = getRegularCount();
+
+    for (int i = 0; i < regularCount; i++) {
+      final scheduledDateTime = DateTime(
+        startDate.year,
+        startDate.month,
+        startDate.day,
+        (reminderTime.hour + (i * (24 ~/ regularCount))) % 24, // adjust hour based on regular count and index
+        reminderTime.minute,
+      );
+
+      await NotificationService.scheduleMedicationReminder(
+        id: baseId + i,
+        title: "Medication Reminder",
+        body: "Time to take $medicationName",
+        scheduledTime: scheduledDateTime,
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -164,8 +204,12 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
 
               const SizedBox(height: 16),
 
-              DropdownButtonFormField(
+              DropdownButtonFormField<String>(
                 value: frequency,
+                decoration: const InputDecoration(
+                  labelText: "Frequency",
+                  border: OutlineInputBorder(),
+                ),
                 items: const [
                   DropdownMenuItem(
                     value: "Once Daily",
@@ -185,10 +229,6 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                     frequency = value!;
                   });
                 },
-                decoration: const InputDecoration(
-                  labelText: "Frequency",
-                  border: OutlineInputBorder(),
-                ),
               ),
 
               const SizedBox(height: 16),
