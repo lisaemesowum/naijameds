@@ -92,19 +92,21 @@ class FirestoreService {
   }
 //   ===========================
 // ==========================TO VERIFY DRUGS=========================================== // Dynamic values : data points that change automatically at runtime, rather than remaining fixed
-static Future<Map<String, dynamic>?> verifyDrug(String macCode) async { // function to verify drug  <Map<String, dynamic>?>  means it can return null or a map of strings and dynamic values
+  static Future<Map<String, dynamic>?> verifyDrug(String macCode) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection("mac-code")
+        .where("code", isEqualTo: macCode)
+        .limit(1)
+        .get();
 
-         //
-         final snapshot = await FirebaseFirestore.instance  // instance of firestore
-             .collection("mac-code") // collection name
-             .doc(macCode) //
-             .get(); // get data
-         if(snapshot.exists){ // if data exists
-         return snapshot.data(); // return data
-         }else{
-           return null;
-         }
-} //================================handles drug verification================================================================================================
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first.data();
+    }
+    return null;
+  }
+
+
+//================================handles drug verification================================================================================================
 
 // \\\\\\\\\\\\\\\\\\\\\for the save history=\\\\\\\\\\\\\\\\\
 Future<void> saveHistory({  required String drugName, required String code, required String status,})async{

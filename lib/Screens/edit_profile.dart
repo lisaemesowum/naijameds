@@ -28,6 +28,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> updateProfile() async {
+    // Basic validation current password is required for any sensitive operation
+    if (oldPasswordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter your current password to save changes")),
+      );
+      return;
+    }
     try {
       setState(() {
         isLoading = true;
@@ -47,28 +54,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         password: oldPasswordController.text.trim(),
       );
       await user.reauthenticateWithCredential(credential); // Re-authenticate the user with the credential
+      String message = "";
       // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
       // Update Name
-      if (nameController.text.trim().isNotEmpty) { // If the name is not empty then update the name of the user
-        await user.updateDisplayName(nameController.text.trim(),); // Update the display name of the user with the name from the name controller
-      }
+      if (nameController.text.trim().isNotEmpty &&
+          nameController.text.trim() != user.displayName) {
+        await user.updateDisplayName(nameController.text.trim());
+        message += "Username updated successfully\n";
+      } // Update the display name of the user with the name from the name controller
 
       // Update Email
       if (emailController.text.trim() != user.email) {
-        await user.verifyBeforeUpdateEmail(emailController.text.trim(),); // Verify the email before updating it with the new email from the email controller
+        await user.verifyBeforeUpdateEmail(emailController.text.trim());
+        message += "Verification email sent for new email\n";
       }
 
       // Update Password
-     if(newPasswordController.text.trim().isEmpty){
-       await user.updatePassword(newPasswordController.text.trim()); // Update the password of the user with the new password from the new password controller
-     }
+      if (newPasswordController.text.trim().isNotEmpty) {
+        await user.updatePassword(newPasswordController.text.trim());
+        message += "Password updated successfully";
+      }
 
       await user.reload();
+      user = FirebaseAuth.instance.currentUser;
+      setState(() {
+        currentUser = user;
+        nameController.text = user?.displayName ?? "";
+        emailController.text = user?.email ?? "";
+        oldPasswordController.clear();
+        newPasswordController.clear();
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Profile Updated Successfully"),
-        ),
+         SnackBar(
+          content: Text(
+            message.isEmpty
+                ? "No changes made"
+                : message,
+          ),        ),
       );
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,9 +101,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
+        SnackBar(content: Text("An error occurred: ${e.toString()}")),
       );
     } finally {
       setState(() {

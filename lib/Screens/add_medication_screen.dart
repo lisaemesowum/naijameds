@@ -255,6 +255,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                     value: "Diabetes",
                     child: Text("Diabetes"),
                   ),
+                  DropdownMenuItem(
+                    value: "Malaria",
+                    child: Text("Malaria"),
+                  ),
                 ],
                 onChanged: (value) {
                   setState(() {

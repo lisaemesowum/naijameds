@@ -2,9 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:naijameds/Screens/chat_screen.dart';
 import 'package:naijameds/Screens/history_screen.dart';
+import 'package:naijameds/Screens/reports_screen.dart';
 import 'package:naijameds/Screens/scan_screen.dart';
 import 'package:naijameds/Screens/search_screen.dart';
 import 'package:naijameds/utils/auth_helper.dart';
+
+import 'DrugQrScreen.dart';
+import 'add_medication_screen.dart';
+import 'cart_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -255,6 +260,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       MainAxisAlignment.spaceBetween,
                       children: [
                         _buildServiceItem(
+                          icon: Icons.report_gmailerrorred_rounded,
+                          label: "Reports",
+                          color: Colors.blue,
+                          onTap: () => navigateProtected(
+                            context,
+                            screen: const ReportsScreen(),
+                          ),
+                          ),
+                        _buildServiceItem(
+                          icon: Icons.qr_code_2,
+                          label: "drug",
+                          color: Colors.blue,
+                          onTap: () => navigateProtected(
+                            context,
+                            screen: DrugQrScreen(docId: '318992862876'),
+                          ),
+                        ),
+                        _buildServiceItem(
                           icon: Icons.forum,
                           label: "Consultant",
                           color: Colors.blue,
@@ -273,10 +296,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         _buildServiceItem(
-                          icon: Icons.emergency_recording,
-                          label: "Emergency",
+                          icon: Icons.shopping_cart,
+                          label: "Cart",
                           color: Colors.red,
-                          onTap: () {},
+                          onTap: () => navigateProtected(context, screen: const CartScreen()),
                         ),
                       ],
                     ),
