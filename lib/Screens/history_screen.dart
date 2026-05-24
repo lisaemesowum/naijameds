@@ -34,22 +34,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ? const Center(child: Text("Please sign in to view history"))
           : StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
+                  // .collection("history")
+                  // .where("userId", isEqualTo: user.uid)
+                  // .orderBy("createdAt", descending: true)
+                  // .snapshots(),
                   .collection("history")
                   .where("userId", isEqualTo: user.uid)
-                  .orderBy("createdAt", descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 // 1. Check for Errors (Important for missing indexes)
                 if (snapshot.hasError) {
                   debugPrint("Firestore Error: ${snapshot.error}");
                   return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text(
-                        "Error loading history. If this is the first scan, you may need to wait a minute for the index to build.\n\nDetails: ${snapshot.error}",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.history_toggle_off,
+                          size: 80,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "Unable to load scan history",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }

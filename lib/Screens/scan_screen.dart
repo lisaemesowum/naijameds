@@ -24,6 +24,7 @@ class _ScanScreenState extends State<ScanScreen> {
     if (isScanned) return;
 
     final String? code = capture.barcodes.first.rawValue;
+    debugPrint("SCANNED: $code");
 
     if (code != null) {
       setState(() {

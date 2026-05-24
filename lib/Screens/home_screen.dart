@@ -268,15 +268,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             screen: const ReportsScreen(),
                           ),
                           ),
-                        _buildServiceItem(
-                          icon: Icons.qr_code_2,
-                          label: "drug",
-                          color: Colors.blue,
-                          onTap: () => navigateProtected(
-                            context,
-                            screen: DrugQrScreen(docId: '318992862876'),
-                          ),
-                        ),
+                        // _buildServiceItem(
+                        //   icon: Icons.qr_code_2,
+                        //   label: "drug",
+                        //   color: Colors.blue,
+                        //   onTap: () => navigateProtected(
+                        //     context,
+                        //     screen: DrugQrScreen(docId: '318992862876'),
+                        //   ),
+                        // ),
                         _buildServiceItem(
                           icon: Icons.forum,
                           label: "Consultant",
