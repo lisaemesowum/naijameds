@@ -32,16 +32,16 @@ class _MapScreenState extends State<MapScreen> {
 
     try {
       Position position = await _determinePosition();
+      final lat = position.latitude;
+      final lng = position.longitude;
 
-      userLocation = LatLng(
-        position.latitude,
-        position.longitude,
-      );
+      if (!lat.isFinite || !lng.isFinite) {
+        throw Exception("Invalid user location");
+      }
 
-      final results = await MapService().fetchNearbyPlaces(
-        position.latitude,
-        position.longitude,
-      );
+      userLocation = LatLng(lat, lng);
+
+      final results = await MapService().fetchNearbyPlaces(lat, lng);
 
       if (mounted) {
         setState(() {
@@ -49,7 +49,7 @@ class _MapScreenState extends State<MapScreen> {
           isLoading = false;
         });
       }
-    } catch (e) {
+    }  catch (e) {
       if (mounted) {
         setState(() {
           errorMessage = e.toString();

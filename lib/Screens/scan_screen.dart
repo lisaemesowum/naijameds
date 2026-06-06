@@ -14,11 +14,35 @@ class ScanScreen extends StatefulWidget {
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> {
+class _ScanScreenState extends State<ScanScreen> with SingleTickerProviderStateMixin {
   final MobileScannerController controller = MobileScannerController();
   final ImagePicker picker = ImagePicker();
   bool isScanned = false;
   bool isTorchOn = false;
+
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Professional scanning laser animation
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    controller.dispose();
+    super.dispose();
+  }
 
   void onDetect(BarcodeCapture capture) {
     if (isScanned) return;
@@ -39,7 +63,7 @@ class _ScanScreenState extends State<ScanScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(color: Color(0xFF17B169)),
       ),
     );
 
@@ -60,7 +84,7 @@ class _ScanScreenState extends State<ScanScreen> {
       if (!mounted) return;
       Navigator.pop(context); // Dismiss loading dialog
 
-      // Await the navigation so we don't resume scanning until the user returns
+      // Navigate to results screen and wait for user to come back
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -81,7 +105,7 @@ class _ScanScreenState extends State<ScanScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          isScanned = false; // Allow scanning again after returning
+          isScanned = false; // Allow scanning again after returning from result screen
         });
       }
     }
@@ -95,7 +119,7 @@ class _ScanScreenState extends State<ScanScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(color: Color(0xFF17B169)),
       ),
     );
 
@@ -116,152 +140,251 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double scanAreaSize = 280.0;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          MobileScanner(
-            controller: controller,
-            onDetect: onDetect,
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: const Icon(Icons.close, color: Colors.white, size: 30),
-                      ),
-                      const Text(
-                        "Scan NAFDAC Code",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          controller.toggleTorch();
-                          setState(() {
-                            isTorchOn = !isTorchOn;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white12,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: Icon(
-                            isTorchOn ? Icons.flash_on : Icons.flash_off,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Put the code inside the frame 👇",
-                  style: TextStyle(color: Colors.white70, fontSize: 15),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: Center(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final scanWindow = Rect.fromCenter(
+            center: Offset(constraints.maxWidth / 2, constraints.maxHeight / 2),
+            width: scanAreaSize,
+            height: scanAreaSize,
+          );
+
+          return Stack(
+            children: [
+              // 1. Camera Feed (Bottom Layer)
+              MobileScanner(
+                controller: controller,
+                onDetect: onDetect,
+                fit: BoxFit.cover,
+                scanWindow: scanWindow,
+              ),
+
+              // 2. Centered Overlay & Visual Frame
+              Stack(
+                children: [
+                  // Cutout Overlay
+                  ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withOpacity(0.7),
+                      BlendMode.srcOut,
+                    ),
                     child: Stack(
-                      alignment: Alignment.center,
                       children: [
                         Container(
-                          width: 300,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Colors.white10,
-                            borderRadius: BorderRadius.circular(10),
+                          decoration: const BoxDecoration(
+                            color: Colors.black,
+                            backgroundBlendMode: BlendMode.dstOut,
                           ),
                         ),
-                        Positioned(top: 1, left: 1, child: corner()),
-                        Positioned(top: 0, right: 0, child: corner(isRight: true)),
-                        Positioned(bottom: 0, left: 0, child: corner(isBottom: true)),
-                        Positioned(bottom: 0, right: 0, child: corner(isRight: true, isBottom: true)),
+                        Center(
+                          child: Container(
+                            height: scanAreaSize,
+                            width: scanAreaSize,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(40),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: scanImageFromGallery,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
+                  
+                  // Visual Frame, Corners, and Laser (Centered exactly with the cutout)
+                  Center(
+                    child: SizedBox(
+                      width: scanAreaSize,
+                      height: scanAreaSize,
+                      child: Stack(
+                        children: [
+                          // Border
+                          Container(
                             decoration: BoxDecoration(
-                              color: Colors.white12,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.photo, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text("Gallery", style: TextStyle(color: Colors.white)),
-                              ],
+                              border: Border.all(color: Colors.white24, width: 2),
+                              borderRadius: BorderRadius.circular(40),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: showManualInputDialog,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            decoration: BoxDecoration(
-                              color: Colors.white12,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.qr_code_scanner, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text("Enter Code", style: TextStyle(color: Colors.white)),
-                              ],
-                            ),
+                          // Animated Laser Line
+                          AnimatedBuilder(
+                            animation: _animation,
+                            builder: (context, child) {
+                              return Positioned(
+                                top: 20 + ((scanAreaSize - 40) * _animation.value),
+                                left: 20,
+                                right: 20,
+                                child: Container(
+                                  height: 3,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF17B169),
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF17B169).withOpacity(0.6),
+                                        blurRadius: 12,
+                                        spreadRadius: 2,
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        ),
+                          // Professional Corner Brackets
+                          Positioned(top: 0, left: 0, child: _buildCorner(isTop: true, isLeft: true)),
+                          Positioned(top: 0, right: 0, child: _buildCorner(isTop: true, isLeft: false)),
+                          Positioned(bottom: 0, left: 0, child: _buildCorner(isTop: false, isLeft: true)),
+                          Positioned(bottom: 0, right: 0, child: _buildCorner(isTop: false, isLeft: false)),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+
+              // 3. UI Layer (Top Bar, Instructions, and Bottom Actions)
+              SafeArea(
+                child: Column(
+                  children: [
+                    // Top Bar
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              if (Navigator.canPop(context)){
+                                Navigator.pop(context);
+                              }
+                            },
+                            icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                            style: IconButton.styleFrom(backgroundColor: Colors.black26),
+                          ),
+                          const Text(
+                            "Verify Product",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              controller.toggleTorch();
+                              setState(() => isTorchOn = !isTorchOn);
+                            },
+                            icon: Icon(
+                              isTorchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                              color: Colors.white,
+                            ),
+                            style: IconButton.styleFrom(backgroundColor: Colors.black26),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    const Text(
+                      "Align NAFDAC / MAS code within the frame",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    
+                    // Positioned below the frame
+                    const SizedBox(height: 50),
+
+                    const Spacer(),
+
+                    // Bottom Actions with Gradient Background
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildBottomAction(
+                            icon: Icons.photo_library_rounded,
+                            label: "Gallery",
+                            onTap: scanImageFromGallery,
+                          ),
+                          _buildBottomAction(
+                            icon: Icons.keyboard_rounded,
+                            label: "Enter Code",
+                            onTap: showManualInputDialog,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget corner({bool isRight = false, bool isBottom = false}) {
+  Widget _buildCorner({required bool isTop, required bool isLeft}) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 45,
+      height: 45,
       decoration: BoxDecoration(
         border: Border(
-          top: isBottom ? BorderSide.none : const BorderSide(color: Color(0xFF4FB062), width: 4),
-          left: isRight ? BorderSide.none : const BorderSide(color: Color(0xFF4FB062), width: 4),
-          right: isRight ? const BorderSide(color: Color(0xFF4FB062), width: 4) : BorderSide.none,
-          bottom: isBottom ? const BorderSide(color: Color(0xFF4FB062), width: 4) : BorderSide.none,
+          top: isTop ? const BorderSide(color: Color(0xFF17B169), width: 6) : BorderSide.none,
+          bottom: !isTop ? const BorderSide(color: Color(0xFF17B169), width: 6) : BorderSide.none,
+          left: isLeft ? const BorderSide(color: Color(0xFF17B169), width: 6) : BorderSide.none,
+          right: !isLeft ? const BorderSide(color: Color(0xFF17B169), width: 6) : BorderSide.none,
         ),
+        borderRadius: BorderRadius.only(
+          topLeft: isTop && isLeft ? const Radius.circular(40) : Radius.zero,
+          topRight: isTop && !isLeft ? const Radius.circular(40) : Radius.zero,
+          bottomLeft: !isTop && isLeft ? const Radius.circular(40) : Radius.zero,
+          bottomRight: !isTop && !isLeft ? const Radius.circular(40) : Radius.zero,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomAction({required IconData icon, required String label, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -271,19 +394,24 @@ class _ScanScreenState extends State<ScanScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Enter NAFDAC Code"),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title: const Text("Enter Code", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2A6074))),
         content: TextField(
           controller: codeController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            hintText: "Enter code",
-            border: OutlineInputBorder(),
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: "Enter MAS scratch code",
+            filled: true,
+            fillColor: Colors.grey.shade100,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text("Cancel", style: TextStyle(color: Colors.grey.shade600)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -293,7 +421,11 @@ class _ScanScreenState extends State<ScanScreen> {
                 verifyDrug(code);
               }
             },
-            child: const Text("Verify"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF17B169),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("Verify", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           )
         ],
       ),

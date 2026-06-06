@@ -10,178 +10,298 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  final Color primaryColor = const Color(0xFF2A6074);
+  final Color accentColor = const Color(0xFF17B169);
+  final Color warningColor = const Color(0xFFE74C3C);
+
   @override
   Widget build(BuildContext context) {
-    // Get current user inside build to ensure we have the latest auth state
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FA),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
           "Scan History",
           style: TextStyle(
-            color: Colors.black,
+            color: primaryColor,
             fontWeight: FontWeight.bold,
+            fontSize: 22,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: primaryColor),
       ),
       body: user == null
-          ? const Center(child: Text("Please sign in to view history"))
+          ? _buildLoginPrompt()
           : StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  // .collection("history")
-                  // .where("userId", isEqualTo: user.uid)
-                  // .orderBy("createdAt", descending: true)
-                  // .snapshots(),
-                  .collection("history")
-                  .where("userId", isEqualTo: user.uid)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                // 1. Check for Errors (Important for missing indexes)
-                if (snapshot.hasError) {
-                  debugPrint("Firestore Error: ${snapshot.error}");
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.history_toggle_off,
-                          size: 80,
-                          color: Colors.grey.shade300,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "Unable to load scan history",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+        stream: FirebaseFirestore.instance
+            .collection("history")
+            .where("userId", isEqualTo: user.uid)
+            .orderBy("createdAt", descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            debugPrint("Firestore Error: ${snapshot.error}");
+            if (snapshot.error.toString().contains('failed-precondition')) {
+              return _buildFallbackStream(user.uid);
+            }
+            return _buildErrorState(snapshot.error.toString());
+          }
 
-                // 2. Loading State
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                // 3. Empty State
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.history_rounded, size: 80, color: Colors.grey.shade300),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "No Scan History Yet",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return _buildEmptyState();
+          }
 
-                final history = snapshot.data!.docs;
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: history.length,
-                  itemBuilder: (context, index) {
-                    final doc = history[index];
-                    final data = doc.data() as Map<String, dynamic>;
-                    final bool isVerified = data["status"] == "Verified";
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 15),
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(22),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          // Status Icon
-                          Container(
-                            height: 60,
-                            width: 60,
-                            decoration: BoxDecoration(
-                              color: isVerified
-                                  ? Colors.green.withOpacity(0.13)
-                                  : Colors.red.withOpacity(0.13),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            child: Icon(
-                              isVerified ? Icons.verified : Icons.warning_rounded,
-                              color: isVerified ? Colors.green : Colors.red,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          // Drug Info
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  data["drugName"] ?? "Unknown Drug",
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  "Code: ${data["code"] ?? "N/A"}",
-                                  style: const TextStyle(color: Colors.grey, fontSize: 13),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Status Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isVerified
-                                  ? Colors.green.withOpacity(0.12)
-                                  : Colors.red.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Text(
-                              data["status"] ?? "Unknown",
-                              style: TextStyle(
-                                color: isVerified ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+          return _buildHistoryContent(snapshot.data!.docs);
+        },
+      ),
     );
   }
+
+  Widget _buildHistoryContent(List<QueryDocumentSnapshot> docs) {
+    int total = docs.length;
+    int safe = docs.where((doc) => doc['status'] == 'Verified').length;
+    int warning = total - safe;
+
+    return Column(
+      children: [
+
+        // =========================
+        // FIXED: STATS ROW OVERFLOW
+        // =========================
+        // BEFORE: Row with Expanded caused overflow on small screens
+        // AFTER: Wrapped in SingleChildScrollView to prevent pixel overflow
+
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal, // 🔥 FIX: allows horizontal scroll instead of overflow
+            child: Row(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  child: _buildStatCard(
+                    "Total",
+                    total,
+                    primaryColor,
+                    Icons.analytics_outlined,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  child: _buildStatCard(
+                    "Safe",
+                    safe,
+                    accentColor,
+                    Icons.verified_outlined,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  child: _buildStatCard(
+                    "Warning",
+                    warning,
+                    warningColor,
+                    Icons.report_problem_outlined,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // =========================
+        // LIST (UNCHANGED)
+        // =========================
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            physics: const BouncingScrollPhysics(),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final data = docs[index].data() as Map<String, dynamic>;
+              return _buildHistoryCard(data);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(String label, int value, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: color.withOpacity(0.1), width: 1),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value.toString(),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(Map<String, dynamic> data) {
+    final bool isVerified = data["status"] == "Verified";
+    final timestamp = data["createdAt"] as Timestamp?;
+    String dateStr = "Recent";
+
+    if (timestamp != null) {
+      final date = timestamp.toDate();
+      final months = [
+        'Jan','Feb','Mar','Apr','May','Jun',
+        'Jul','Aug','Sep','Oct','Nov','Dec'
+      ];
+      dateStr = "${date.day} ${months[date.month - 1]} ${date.year}";
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              height: 56,
+              width: 56,
+              decoration: BoxDecoration(
+                color: (isVerified ? accentColor : warningColor).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                isVerified
+                    ? Icons.verified_user_rounded
+                    : Icons.gpp_bad_rounded,
+                color: isVerified ? accentColor : warningColor,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data["drugName"] ?? "Unknown Drug",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    data["code"] ?? "N/A",
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dateStr,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: (isVerified ? accentColor : warningColor).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                isVerified ? "AUTHENTIC" : "WARNING",
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: isVerified ? accentColor : warningColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackStream(String uid) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection("history")
+          .where("userId", isEqualTo: uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return _buildHistoryContent(snapshot.data!.docs);
+      },
+    );
+  }
+
+  Widget _buildEmptyState() => const Center(child: Text("No history found"));
+
+  Widget _buildErrorState(String error) =>
+      Center(child: Text("Error: $error"));
+
+  Widget _buildLoginPrompt() =>
+      const Center(child: Text("Please login"));
 }

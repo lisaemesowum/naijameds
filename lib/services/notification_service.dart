@@ -11,7 +11,7 @@ class NotificationService {
     tz.initializeTimeZones();
 
     const androidSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher'); //'@mipmap/ic_launcher' points to your default launcher icon inside your Android project.
+    AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const settings = InitializationSettings(
       android: androidSettings,
@@ -20,6 +20,12 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.initialize(
       settings: settings,
     );
+    // Request notification permission
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+
   }
 
   static Future<void> scheduleMedicationReminder({
@@ -43,9 +49,14 @@ class NotificationService {
           channelDescription: 'Medication reminder notifications',
           importance: Importance.max,
           priority: Priority.high,
+          playSound: true,
+          enableVibration: true,
+          ongoing: true,
+          autoCancel: false,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time, // This makes it repeat daily at the set time
     );
   }
 
@@ -54,4 +65,5 @@ class NotificationService {
       id: id,
     );
   }
+
 }
