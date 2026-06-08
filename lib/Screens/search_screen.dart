@@ -180,7 +180,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   onPressed: () {
                     _searchController.text = s;
-                    searchMedications(s);
+                    searchMedications(s.toLowerCase().trim());
                   },
                 )).toList(),
               ),
@@ -224,6 +224,8 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+
+  // this code is for the search results and the medication details screen
   Widget _buildResultsList() {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -237,16 +239,50 @@ class _SearchScreenState extends State<SearchScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
           ),
+          // the image container
           child: ListTile(
             contentPadding: const EdgeInsets.all(12),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: const Color(0xFF17B169).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.medication_rounded, color: Color(0xFF17B169)),
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/images/medicines/${med.image}',
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF17B169).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.medication_rounded,
+                      color: Color(0xFF17B169),
+                    ),
+                  );
+                },
+              ),
             ),
-            title: Text(med.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(med.desc ?? "Quality approved", style: const TextStyle(fontSize: 12)),
-            trailing: Text(med.price, style: const TextStyle(color: Color(0xFF17B169), fontWeight: FontWeight.bold)),
+            title: Text(
+                med.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Color(0xFF2A6074))),
+            // subtitle: Text(med.desc ?? "Quality approved", style: const TextStyle(fontSize: 10)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 4),
+                Text(
+                  med.price,
+                  style: const TextStyle(
+                    color: Color(0xFF17B169),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MedicationDetailsScreen(medication: med))),
           ),
         );

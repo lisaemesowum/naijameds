@@ -19,10 +19,10 @@ class MedicationDetailsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.green,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -44,17 +44,27 @@ class MedicationDetailsScreen extends StatelessWidget {
                 height: 220,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.05),
+                  color: Colors.green.shade900,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(color: accentColor.withOpacity(0.1)),
                 ),
-                child: const Icon(
-                  Icons.medication_rounded,
-                  size: 100,
-                  color: accentColor,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: Image.asset(
+                    'assets/images/medicines/${medication.image}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.medication,
+                        size: 100,
+                        color: accentColor,
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
+            // end image
             const SizedBox(height: 32),
             // Name and Price Row
             Row(
@@ -63,7 +73,7 @@ class MedicationDetailsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         medication.name,
@@ -71,6 +81,15 @@ class MedicationDetailsScreen extends StatelessWidget {
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        medication.price,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -85,14 +104,7 @@ class MedicationDetailsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                Text(
-                  medication.price,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: accentColor,
-                  ),
-                ),
+                // const SizedBox(height: 8),
               ],
             ),
             const SizedBox(height: 32),
@@ -119,10 +131,11 @@ class MedicationDetailsScreen extends StatelessWidget {
           ],
         ),
       ),
+      // for the bottom navigation bar
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.green.shade500,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           boxShadow: [
             BoxShadow(
@@ -146,6 +159,7 @@ class MedicationDetailsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
+              // this area is for the add to cart button
               Expanded(
                 child: SizedBox(
                   height: 60,
@@ -159,7 +173,6 @@ class MedicationDetailsScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () async {
-                      // Fix: addToCart is async, we must await it
                       final bool added = await CartService.addToCart(
                         CartItem(
                           name: medication.name,

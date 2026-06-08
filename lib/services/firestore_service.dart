@@ -20,19 +20,38 @@ class FirestoreService {
         final FirebaseAuth _auth = FirebaseAuth.instance; // instance of firebase auth
 
         // search medications from firebase
-        Future <List<Medication>> searchMedications(String query) async {
-        //   get matching medication
-        final result = await medicationRef
-            .where('name',isGreaterThanOrEqualTo: query) //  where name is greater than or equal to query
-            .get();//  get the data
+        // Future <List<Medication>> searchMedications(String query) async {
+        // //   get matching medication
+        // final result = await medicationRef
+        //     .where('name',isGreaterThanOrEqualTo: query) //  where name is greater than or equal to query
+        //     .get();//  get the data
+        //
+        // //   convert firebase docs to medication objects
+        //
+        //   return result.docs.map((doc){  //
+        //     final data = doc.data() as Map<String, dynamic>;
+        //     return Medication.fromFirestore(data);
+        //   }).toList();
+        //   }
+        Future<List<Medication>> searchMedications(String query) async {
+          query = query.toLowerCase().trim();
 
-        //   convert firebase docs to medication objects
+          final result = await medicationRef
+              .where(
+            'searchName',
+            isGreaterThanOrEqualTo: query,
+          )
+              .where(
+            'searchName',
+            isLessThanOrEqualTo: '$query\uf8ff',
+          )
+              .get();
 
-          return result.docs.map((doc){  //
+          return result.docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
             return Medication.fromFirestore(data);
           }).toList();
-          }
+        }
         // Future<List<Medication>> searchMedications(String query) async {
         //   final snapshot = await FirebaseFirestore.instance
         //       .collection('medications')

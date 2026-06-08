@@ -4,12 +4,14 @@ class Medication {
   final String name;
   final String desc;
   final String price;
+  final String image;
 
   //  constructor
   Medication({
     required this.name,
     required this.desc,
     required this.price,
+    required this.image,
   });
 
 
@@ -25,6 +27,9 @@ class Medication {
       desc: data["desc"] ?? "",
 
       price: data["price"] ?? "",
+
+      image: data['image'] ?? '',
+
     );
   }
 }
