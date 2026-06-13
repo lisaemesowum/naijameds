@@ -20,12 +20,28 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.initialize(
       settings: settings,
     );
+
+    // Explicitly create the notification channel with the custom sound
+    // Changing the ID to 'v3' to ensure a fresh channel is created on your device
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'medication_alarm_v4',
+      'Medication Alarms',
+      description: 'High priority medication reminders',
+      importance: Importance.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('noti'),
+      enableVibration: true,
+    );
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
     // Request notification permission
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
-
   }
 
   static Future<void> scheduleMedicationReminder({
@@ -44,19 +60,23 @@ class NotificationService {
       ),
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
-          'medication_channel',
-          'Medication Reminders',
-          channelDescription: 'Medication reminder notifications',
+          'medication_alarm_channel_v3',
+          'Medication Alarms',
+          channelDescription: 'High priority medication reminders',
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
+          sound: RawResourceAndroidNotificationSound('noti'),
           enableVibration: true,
           ongoing: true,
           autoCancel: false,
+          fullScreenIntent: true,
+          category: AndroidNotificationCategory.alarm,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time, // This makes it repeat daily at the set time
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
@@ -65,5 +85,4 @@ class NotificationService {
       id: id,
     );
   }
-
 }

@@ -110,14 +110,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(20.0),
                 // for search next page
                 child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SearchScreen(),
-                      ),
-                    );
-                  },
+                  // onTap: () {
+                  //   Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (context) => const SearchScreen(),
+                  //     ),
+                  //   );
+                  // },
+                  onTap: () => navigateProtected(
+                    context,
+                    screen: const SearchScreen(),
+                  ),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -214,12 +218,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             // for the scan bottom button
                             ElevatedButton(
                               onPressed: () {
-                                Navigator.push(
+                                navigateProtected(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                    const ScanScreen(),
-                                  ),
+                                  screen: const ScanScreen(),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
