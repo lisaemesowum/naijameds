@@ -14,6 +14,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController oldPasswordController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
+  final Color primaryColor = const Color(0xFF2A6074);
 
   bool isLoading = false;
 
@@ -113,19 +114,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FA),
+      backgroundColor:  Colors.green.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: primaryColor,
         elevation: 0,
         centerTitle: true,
         title: const Text(
           "Edit Profile",
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.green,
             fontWeight: FontWeight.bold,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.green),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

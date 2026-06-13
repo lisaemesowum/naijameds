@@ -32,17 +32,17 @@ class MedicationListScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor:  Colors.green.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: primaryColor,
         elevation: 0,
         centerTitle: true,
         title: Text(
           "My Medications",
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: primaryColor, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.green, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),

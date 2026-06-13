@@ -32,6 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  // =====================================================================================
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -40,54 +41,187 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
+      UserCredential userCredential;
+
       if (_isLogin) {
+        // ================= LOGIN =================
+
+        userCredential =
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+
+        // Reload user to get latest email verification status
+        await userCredential.user?.reload();
+
+        final user = FirebaseAuth.instance.currentUser;
+
+        if (user == null) {
+          throw FirebaseAuthException(
+            code: "user-not-found",
+            message: "User not found.",
+          );
+        }
+
+        if (!user.emailVerified) {
+          // Uncomment if you want to resend verification every login attempt.
+          // await user.sendEmailVerification();
+
+          await FirebaseAuth.instance.signOut();
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.orange,
+                margin: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                content: const Row(
+                  children: [
+                    Icon(Icons.email_outlined, color: Colors.white),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Please verify your email before logging in. Check your inbox or spam folder.",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return;
+        }
+
+        // Navigate only if verified
+        if (mounted) {
+          if (widget.nextScreen != null) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => widget.nextScreen!,
+              ),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DashboardScreeen(
+                  initialIndex: widget.tabIndex ?? 0,
+                ),
+              ),
+            );
+          }
+        }
       } else {
-        UserCredential userCredential =
+        // ================= REGISTER =================
+
+        userCredential =
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-        await userCredential.user!.updateDisplayName(
-          _nameController.text.trim(),
-        );
-      }
 
-      if (mounted) {
-        if (widget.nextScreen != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => widget.nextScreen!),
+        final user = userCredential.user;
+
+        if (user != null) {
+          // Save user's name
+          await user.updateDisplayName(
+            _nameController.text.trim(),
           );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DashboardScreeen(
-                initialIndex: widget.tabIndex ?? 0,
+
+          // Send verification email
+          await user.sendEmailVerification();
+
+          // Refresh user info
+          await user.reload();
+        }
+
+        // Sign out until email is verified
+        await FirebaseAuth.instance.signOut();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.green,
+              margin: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              content: const Row(
+                children: [
+                  Icon(Icons.mark_email_read, color: Colors.white),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Account created successfully! Please verify your email before logging in. Check your inbox or spam folder.",
+                    ),
+                  ),
+                ],
               ),
             ),
           );
+
+          // Switch back to login mode
+          setState(() {
+            _isLogin = true;
+          });
         }
+
+        return;
       }
     } on FirebaseAuthException catch (e) {
-      String message = "Authentication failed";
-      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
-        message = "Invalid email or password";
-      } else if (e.code == 'email-already-in-use') {
-        message = "Email already in use";
-      } else if (e.code == 'weak-password') {
-        message = "Password is too weak";
-      } else if (e.message != null) {
-        message = e.message!;
+      String message;
+
+      switch (e.code) {
+        case "user-not-found":
+        case "wrong-password":
+        case "invalid-credential":
+          message = "Invalid email or password.";
+          break;
+
+        case "email-already-in-use":
+          message = "An account with this email already exists.";
+          break;
+
+        case "weak-password":
+          message = "Password is too weak.";
+          break;
+
+        case "invalid-email":
+          message = "Please enter a valid email address.";
+          break;
+
+        case "too-many-requests":
+          message = "Too many attempts. Please try again later.";
+          break;
+
+        default:
+          message = e.message ?? "Authentication failed.";
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text(message),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text(e.toString()),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -96,6 +230,8 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     }
   }
+  // =========================================================================================
+
 
   @override
   Widget build(BuildContext context) {
@@ -186,9 +322,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          _isLogin ? "Login" : "Sign Up",
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
+                    _isLogin ? "Login" : "Sign Up",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

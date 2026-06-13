@@ -34,16 +34,11 @@ class _ChatScreenState extends State<ChatScreen> {
   // linked from ai_service.dart
 
   Future<void> SendMessage() async{
-    // String userMessage = _messageController.text;
-    // String reply = await _aiService.ask(userMessage);
-    // setState(() {
-    //   aiReply = reply;
-    // });
-    // _messageController.clear();
+    //  Get user message from text field
     String userMessage = _messageController.text.trim();
 
     if(userMessage.isEmpty) return;
-  //   Add user message
+    //   Add user message
     setState(() {
       _messages.add({
         "text": userMessage,
@@ -61,17 +56,27 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
     try {
+      setState(() {
+        _isTyping = true;
+      });
+      _scrollToBottom();
+      //
+      final time = Stopwatch()..start();
       // Ask AI
       String reply = await _aiService.ask(userMessage);
+      time.stop(); // stop the stopwatch
+
 
       // Add AI reply
       setState(() {
+        _isTyping = false;
         _messages.add({
           "text": reply,
           "isMe": false,
-          "time": TimeOfDay.now().format(context),
+          "time": "${TimeOfDay.now().format(context)}s",
         });
       });
+      _scrollToBottom();
       // SAVE AI MESSAGE TO FIRESTORE
       await _firestoreService.saveMessage({
         "type": "text",
@@ -80,6 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     } catch (e) {
       setState(() {
+        _isTyping = false;
         _messages.add({
           "text": "Sorry, I'm having trouble connecting right now. Please try again.",          "isMe": false,
           "time": TimeOfDay.now().format(context),
@@ -99,7 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // ---------------------------------------FOR IMAGES ---------------------------------------------------------
   Future<void> pickImage() async {
     final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
+      source: ImageSource.gallery,
     );
     if(image == null) return;
     File file = File(image.path);
@@ -149,260 +155,17 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
   // ===============================================
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     backgroundColor: const Color(0xFFF4F7F5),
-  //     appBar: AppBar(
-  //       backgroundColor: Colors.white,
-  //       elevation: 0.5,
-  //       leadingWidth: 40,
-  //       leading: IconButton(
-  //         icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
-  //         onPressed: () => Navigator.pop(context),
-  //       ),
-  //       title: Row(
-  //         children: [
-  //           Stack(
-  //             children: [
-  //               CircleAvatar(
-  //                 radius: 20,
-  //                 backgroundColor: const Color(0xFF4FB062).withOpacity(0.1),
-  //                 child: const Icon(Icons.person, color: Color(0xFF4FB062)),
-  //               ),
-  //               Positioned(
-  //                 right: 0,
-  //                 bottom: 0,
-  //                 child: Container(
-  //                   height: 12,
-  //                   width: 12,
-  //                   decoration: BoxDecoration(
-  //                     color: Colors.green,
-  //                     shape: BoxShape.circle,
-  //                     border: Border.all(color: Colors.white, width: 2),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //           const SizedBox(width: 12),
-  //           Expanded(
-  //             child: Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 Row(
-  //                   children: const [
-  //                     Text(
-  //                       "NaijaMeds AI",
-  //                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2A6074)),
-  //                     ),
-  //                     SizedBox(width: 4),
-  //                     Icon(Icons.verified, size: 14, color: Colors.blue),
-  //                   ],
-  //                 ),
-  //                 const Text(
-  //                   "HealthCare Pharmacy • Online",
-  //                   style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       // call area
-  //       actions: [
-  //         IconButton(
-  //           icon: const Icon(Icons.call_outlined, color: Color(0xFF2A6074)),
-  //           onPressed: () {},
-  //         ),
-  //         IconButton(
-  //           icon: const Icon(Icons.more_vert, color: Color(0xFF2A6074)),
-  //           onPressed: () {},
-  //         ),
-  //       ],
-  //     ),//===================================appbar ============================
-  //     // body where the chat will be
-  //     body: Column(
-  //       children: [
-  //         Expanded(
-  //           child: ListView.builder(
-  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-  //             itemCount: _messages.length,
-  //             itemBuilder: (context, index) {
-  //               final msg = _messages[index];
-  //               final bool isMe = msg['isMe'];
-  //               return _buildMessageBubble(msg, isMe);
-  //             },
-  //           ),
-  //         ),
-  //         _buildMessageInput(),
-  //       ],
-  //     ),
-  //   );
-  // }
-  //
-  // Widget _buildMessageBubble(Map<String, dynamic> msg, bool isMe) {
-  //   return Padding(
-  //     padding: const EdgeInsets.only(bottom: 12),
-  //     child: Column(
-  //       crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-  //       children: [
-  //         Container(
-  //           constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-  //           decoration: BoxDecoration(
-  //             color: isMe ? const Color(0xFF4FB062) : Colors.white,
-  //             borderRadius: BorderRadius.only(
-  //               topLeft: const Radius.circular(20),
-  //               topRight: const Radius.circular(20),
-  //               bottomLeft: Radius.circular(isMe ? 20 : 0),
-  //               bottomRight: Radius.circular(isMe ? 0 : 20),
-  //             ),
-  //             boxShadow: [
-  //               BoxShadow(
-  //                 color: Colors.black.withOpacity(0.04),
-  //                 blurRadius: 5,
-  //                 offset: const Offset(0, 2),
-  //               ),
-  //             ],
-  //           ),
-  //           padding: const EdgeInsets.all(12),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               if (msg.containsKey('image'))
-  //                 Padding(
-  //                   padding: const EdgeInsets.only(bottom: 8),
-  //                   child: ClipRRect(
-  //                     borderRadius: BorderRadius.circular(12),
-  //                     child: Image.asset(
-  //                       msg['image'],
-  //                       width: double.infinity,
-  //                       fit: BoxFit.cover,
-  //                       errorBuilder: (context, error, stackTrace) => Container(
-  //                         height: 150,
-  //                         width: 150,
-  //                         color: Colors.grey.shade200,
-  //                         child: const Icon(Icons.broken_image_outlined, color: Colors.grey),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               if (msg.containsKey('text'))
-  //                 Text(
-  //                   msg['text'],
-  //                   style: TextStyle(
-  //                     fontSize: 15,
-  //                     color: isMe ? Colors.white : Colors.black87,
-  //                     height: 1.4,
-  //                   ),
-  //                 ),
-  //             ],
-  //           ),
-  //         ),
-  //         const SizedBox(height: 4),
-  //         Row(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Text(
-  //               msg['time'],
-  //               style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-  //             ),
-  //             if (isMe) ...[
-  //               const SizedBox(width: 4),
-  //               const Icon(Icons.done_all, size: 14, color: Color(0xFF4FB062)),
-  //             ],
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  //
-  // Widget _buildMessageInput() {
-  //   return Container(
-  //     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withOpacity(0.05),
-  //           blurRadius: 10,
-  //           offset: const Offset(0, -2),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         Container(
-  //           decoration: BoxDecoration(
-  //             color: const Color(0xFFF0F0F0),
-  //             borderRadius: BorderRadius.circular(12),
-  //           ),
-  //           child: IconButton(
-  //             icon: const Icon(Icons.add_circle_outline, color: Color(0xFF2A6074)),
-  //             onPressed: () {},
-  //           ),
-  //         ),
-  //         const SizedBox(width: 12),
-  //         Expanded(
-  //           child: Container(
-  //             padding: const EdgeInsets.symmetric(horizontal: 16),
-  //             decoration: BoxDecoration(
-  //               color: const Color(0xFFF0F0F0),
-  //               borderRadius: BorderRadius.circular(24),
-  //             ),
-  //             child: TextField(
-  //               controller: _messageController,
-  //               decoration: const InputDecoration(
-  //                 hintText: "Type a message...",
-  //                 hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-  //                 border: InputBorder.none,
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //         const SizedBox(width: 12),
-  //         GestureDetector(
-  //           onTap: () {
-  //             // Logic to send message
-  //           },
-  //           child: Container(
-  //             padding: const EdgeInsets.all(12),
-  //             decoration: const BoxDecoration(
-  //               color: Color(0xFF4FB062),
-  //               shape: BoxShape.circle,
-  //             ),
-  //             child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-// }
+
 // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5),
-
-      // appBar: AppBar(
-      //   backgroundColor: Colors.white,
-      //   elevation: 0.5,
-      //   leading: IconButton(
-      //     icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-      //     onPressed: () => Navigator.pop(context),
-      //   ),
-      //   title: const Text(
-      //     "NaijaMeds AI",
-      //     style: TextStyle(color: Color(0xFF2A6074)),
-      //   ),
-      // ),
+      backgroundColor: Colors.green.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.black54,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.green, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -411,8 +174,8 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: const Color(0xFF4FB062).withOpacity(0.1),
-                  child: const Icon(Icons.psychology, color: Color(0xFF4FB062), size: 20),
+                  backgroundColor: const Color(0xFF4FB062).withOpacity(0.4),
+                  child: const Icon(Icons.medical_services, color: Color(0xFF4FB062), size: 24),
                 ),
                 Positioned(
                   right: 0,
@@ -434,17 +197,18 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 const Text(
                   "NaijaMeds AI",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2A6074)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
+                // for online or offline
                 Text(
                   _isTyping ? "Typing..." : "Online • Assistant",
-                  style: TextStyle(fontSize: 11, color: _isTyping ? const Color(0xFF4FB062) : Colors.grey),
+                  style: TextStyle(fontSize: 12, color: _isTyping ? const Color(0xFF4FB062) : Colors.lightGreen),
                 ),
               ],
             ),
           ],
         ),
-    ),
+      ),
 
 
       body: Column(
@@ -454,9 +218,39 @@ class _ChatScreenState extends State<ChatScreen> {
             child: ListView.builder( // list view builder
               controller: _scrollController, // scroll controller for the list
               padding: const EdgeInsets.all(16),
-              itemCount: _messages.length, // number of messages
+              itemCount: _messages.length + (_isTyping ? 1 : 0), // number of messages + typing indicator if typing is true
               itemBuilder: (context, index) {
-                final msg = _messages[index]; // message
+                // 
+                if (_isTyping && index == _messages.length) {
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        // ai indicator
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text("NaijaMeds AI is typing..." , style: TextStyle(color: Colors.green, fontSize: 12, height: 1.3)),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final msg = _messages[index];
                 final isMe = msg["isMe"] ?? false; // is the message sent by the user
                 //  ================= MESSAGE BUBBLE =================
                 return Align(
@@ -468,9 +262,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.75,
                     ),
+                    // user message bubble with rounded corners and black background
                     decoration: BoxDecoration(
                       color:
-                      isMe ? const Color(0xFF4FB062) : Colors.white,
+                      isMe ? Colors.black54 : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -484,7 +279,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               child: Image.file(File(msg["image"]), width: double.infinity, fit: BoxFit.cover), // image
                             ),
                           ),
-
+                        // user text message
                         if (msg.containsKey("text")) // if the message is text
                           Text(
                             msg["text"],
@@ -513,7 +308,7 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             // color: Colors.white,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.black54,
               boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -2))],
             ),
             child: Row(
@@ -521,7 +316,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 // IMAGE PICK
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline,
-                      color: Color(0xFF2A6074)),
+                      color: Colors.lightGreen , size: 25),
                   onPressed: pickImage,
                 ),
 
@@ -530,16 +325,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     padding:
                     const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0F0F0),
-                      borderRadius: BorderRadius.circular(24),
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    // child: TextField(
-                    //   controller: _messageController,
-                    //   decoration: const InputDecoration(
-                    //     hintText: "Type a message...",
-                    //     border: InputBorder.none,
-                    //   ),
-                    // ),
                     child: TextField(
                       controller: _messageController, // controller for the text field
                       onSubmitted: (_) => SendMessage(),

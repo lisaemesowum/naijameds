@@ -8,22 +8,24 @@ class AboutAppScreen extends StatefulWidget {
 }
 
 class _AboutAppScreenState extends State<AboutAppScreen> {
+  final Color primaryColor = const Color(0xFF2A6074);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FA),
+      backgroundColor:  Colors.green.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: primaryColor,
         elevation: 0,
         centerTitle: true,
         title: const Text(
           "About App",
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.green,
             fontWeight: FontWeight.bold,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.green),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -34,11 +36,11 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: primaryColor,
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.green.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -67,6 +69,7 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
 
@@ -78,7 +81,7 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
-                      color: Colors.grey,
+                      color: Colors.green,
                       height: 1.5,
                     ),
                   ),
@@ -184,11 +187,11 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: primaryColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.white.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -221,6 +224,7 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
 
@@ -229,7 +233,7 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: Colors.grey,
+                    color: Colors.green,
                     height: 1.4,
                   ),
                 ),

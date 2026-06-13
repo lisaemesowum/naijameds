@@ -15,6 +15,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final Color primaryColor = const Color(0xFF2A6074);
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -23,7 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, snapshot) {
         final user = snapshot.data;
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FA),
+            backgroundColor:  Colors.green.shade100,
           body: SingleChildScrollView(
             child: Column(
               children: [
@@ -48,14 +50,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     Positioned(
-                      top: 60,
+                      top: 90,
                       child: Column(
                         children: const [
                           Text(
                             "Account Settings",
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 22,
+                              fontSize: 25,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -121,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     builder: (context) => const EditProfileScreen()));
                           }),
                       _buildSettingsTile(
-                          icon: Icons.notifications_none_rounded,
+                          icon: Icons.list,
                           title: "Medication List",
                           subtitle: "View Medication List",
                           color: Colors.orange,
@@ -132,10 +134,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     builder: (context) => const MedicationListScreen()));
                           }),
                       _buildSettingsTile(
-                          icon: Icons.notifications_none_rounded,
+                          icon: Icons.add_circle_outline_sharp,
                           title: "Medication Management",
                           subtitle: "Add Medication Refill Tracker",
-                          color: Colors.orange,
+                          color: Colors.green,
                           onTap: () {
                             Navigator.push(
                                 context,
@@ -144,11 +146,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           }),
                       const SizedBox(height: 20),
                       _buildSectionTitle("App Settings"),
+                      const SizedBox(height: 20),
                       _buildSettingsTile(
                           icon: Icons.info_outline_rounded,
                           title: "About App",
                           subtitle: "Version and legal info",
-                          color: Colors.grey,
+                          color: Colors.red,
                           onTap: () {
                             Navigator.push(
                                 context,
@@ -184,11 +187,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               await FirebaseAuth.instance.signOut();
                             }
                             // go back to Home (guest state handled by StreamBuilder)
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (_) => const HomeScreen()),
-                              (route) => false,
-                            );
+                            // Navigator.pushAndRemoveUntil(
+                            //   context,
+                            //   MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            //   (route) => false,
+                            // );
                           },
                           icon: const Icon(Icons.logout_rounded, color: Colors.red),
                           label: const Text(
@@ -222,10 +225,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: Colors.grey,
+        color:primaryColor,
         letterSpacing: 0.5,
       ),
     );
@@ -276,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.grey.shade600,
           ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.green),
         onTap: onTap,
       ),
     );

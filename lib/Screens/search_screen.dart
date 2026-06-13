@@ -12,6 +12,8 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  final Color primaryColor = const Color(0xFF2A6074);
+
   bool isLoading = false;
   bool hasSearched = false;
   Timer? _debounce;
@@ -81,20 +83,20 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor:  Colors.green.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor:  primaryColor,
         elevation: 0,
         centerTitle: true,
         leading: Navigator.canPop(context)
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2A6074), size: 20),
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.green, size: 20),
                 onPressed: () => Navigator.pop(context),
               )
             : null,
         title: const Text(
           "Find Medication",
-          style: TextStyle(color: Color(0xFF2A6074), fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 20),
         ),
       ),
       body: Column(
@@ -131,11 +133,11 @@ class _SearchScreenState extends State<SearchScreen> {
           onChanged: _onSearchChanged,
           decoration: InputDecoration(
             hintText: "Search drug, brand, or code...",
-            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            prefixIcon: const Icon(Icons.search, color: Color(0xFF17B169)),
+            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+            prefixIcon: const Icon(Icons.search, color: Colors.green),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.cancel_rounded, color: Colors.grey, size: 20),
+                    icon: const Icon(Icons.cancel_rounded, color: Colors.green, size: 20),
                     onPressed: () {
                       _searchController.clear();
                       searchMedications("");

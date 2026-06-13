@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor:  Colors.green.shade100,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -46,15 +46,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(
                             "Welcome to NaijaMeds",
                             style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 15,
+                              color: Colors.green,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           Text(
                             "Keep Nigeria Safe with NaijaMeds",
                             style: TextStyle(
-                              fontSize: 22,
+                              fontSize: 19,
                               fontWeight: FontWeight.bold,
                               color: primaryColor,
                             ),
@@ -65,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(width: 15),
+                    // notifications
                     Stack(
                       children: [
                         Container(
@@ -92,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 10,
                             width: 10,
                             decoration: BoxDecoration(
-                              color: Colors.redAccent,
+                              color: Colors.green,
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                             ),
@@ -107,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Search Bar
               Padding(
                 padding: const EdgeInsets.all(20.0),
+                // for search next page
                 child: InkWell(
                   onTap: () {
                     Navigator.push(
@@ -122,11 +124,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       vertical: 14,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: primaryColor.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.green.withOpacity(0.03),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -142,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           "Search for verified medications...",
                           style: TextStyle(
-                            color: Colors.grey.shade400,
+                            color: Colors.white.withOpacity(0.7),
                             fontSize: 15,
                           ),
                         ),
@@ -154,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Scan Hero Card
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 13),
                 child: Container(
                   width: double.infinity,
                   constraints: const BoxConstraints(minHeight: 210),
@@ -164,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(22),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFF4FB062).withOpacity(0.3),
@@ -176,11 +178,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Stack(
                     children: [
                       Positioned(
-                        right: -15,
+                        right: -10,
                         bottom: -15,
                         child: Icon(
                           Icons.qr_code_scanner_rounded,
-                          size: 160,
+                          size: 190,
                           color: Colors.white.withOpacity(0.12),
                         ),
                       ),
@@ -194,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               "Quick Drug Verify",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 24,
+                                fontSize: 26,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.5,
                               ),
@@ -204,11 +206,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               "Scan MAS scratch code to check\nauthenticity instantly.",
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.9),
-                                fontSize: 14,
+                                fontSize: 15,
                                 height: 1.4,
                               ),
                             ),
                             const SizedBox(height: 20),
+                            // for the scan bottom button
                             ElevatedButton(
                               onPressed: () {
                                 Navigator.push(
@@ -223,11 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 backgroundColor: Colors.white,
                                 foregroundColor: const Color(0xFF2E7D32),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
+                                  horizontal: 34,
                                   vertical: 12,
                                 ),
                               ),
@@ -235,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 "Scan Now",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 17,
                                 ),
                               ),
                             ),
@@ -258,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       "Quick Services",
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 19,
                         fontWeight: FontWeight.bold,
                         color: primaryColor,
                       ),
@@ -317,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       "Latest Drug Alerts",
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 19,
                         fontWeight: FontWeight.bold,
                         color: primaryColor,
                       ),
@@ -335,11 +338,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
+              // this is for the latest drug alerts cards
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection("drug_reports")
                     .orderBy("timestamp", descending: true)
+                    .limit(10)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -357,32 +361,50 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   final reports = snapshot.data!.docs;
 
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: reports.length > 5 ? 5 : reports.length,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemBuilder: (context, index) {
-                      final report = reports[index].data() as Map<String, dynamic>;
-                      final timestamp = report["timestamp"] as Timestamp?;
+                  return SizedBox(
+                    height: 150,  // the size of the card
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: reports.length,
+                      itemBuilder: (context, index) {
+                        final report =
+                        reports[index].data() as Map<String, dynamic>;
 
-                      return _buildAlertCard(
-                        drugName: report["drugName"] ?? "Unknown Drug",
-                        location: report["location"] ?? "Unknown Location",
-                        description: report["description"] ?? "",
-                        time: timestamp != null 
-                            ? DateFormat('MMM dd, hh:mm a').format(timestamp.toDate())
-                            : "Just now",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ReportDetailsScreen(report: report),
+                        final timestamp =
+                        report["timestamp"] as Timestamp?;
+
+                        return SizedBox(
+                          width: 320,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 15),
+                            child: _buildAlertCard(
+                              drugName:
+                              report["drugName"] ?? "Unknown Drug",
+                              location:
+                              report["location"] ?? "Unknown Location",
+                              description:
+                              report["description"] ?? "",
+                              time: timestamp != null
+                                  ? DateFormat('MMM dd, hh:mm a')
+                                  .format(timestamp.toDate())
+                                  : "Just now",
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ReportDetailsScreen(
+                                      report: report,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      );
-                    },
+                          ),
+                        );
+                      },
+                    ),
                   );
                 },
               ),
@@ -488,6 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // card for last drug alerts
   Widget _buildAlertCard({
     required String drugName,
     required String location,
@@ -496,13 +519,13 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin:  EdgeInsets.zero,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.green.withOpacity(0.04),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -521,7 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Container(
                     width: 6,
-                    color: Colors.redAccent,
+                  color:primaryColor ,
                   ),
                   Expanded(
                     child: Padding(
@@ -537,7 +560,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   drugName.toUpperCase(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 15,
+                                    fontSize: 16,
                                     color: primaryColor,
                                     letterSpacing: 0.5,
                                   ),
@@ -553,7 +576,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   "HIGH ALERT",
                                   style: TextStyle(
                                     color: Colors.red,
-                                    fontSize: 9,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -563,14 +586,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.location_on_rounded, size: 14, color: Colors.grey.shade400),
+                              Icon(Icons.location_on_rounded, size: 15, color: Colors.green.shade400),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   location,
                                   style: TextStyle(
                                     color: Colors.grey.shade600,
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   maxLines: 1,
@@ -581,8 +604,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 time,
                                 style: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontSize: 11,
+                                  color: Colors.grey.shade500,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -594,22 +617,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.grey.shade700,
-                              fontSize: 13,
-                              height: 1.4,
+                              fontSize: 14,
+                              height: 1.6,
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 15),
                           Row(
                             children: [
                               Text(
                                 "View Details",
                                 style: TextStyle(
                                   color: accentColor,
-                                  fontSize: 12,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Icon(Icons.chevron_right_rounded, size: 16, color: accentColor),
+                              Icon(Icons.chevron_right_rounded, size: 17, color: accentColor),
                             ],
                           ),
                         ],

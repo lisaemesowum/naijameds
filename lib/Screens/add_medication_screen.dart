@@ -13,6 +13,7 @@ class AddMedicationScreen extends StatefulWidget {
 
 class _AddMedicationScreenState extends State<AddMedicationScreen> {
 
+
   final _formKey = GlobalKey<FormState>(); // form key for validation
 
   final medicationController = TextEditingController();
@@ -148,17 +149,17 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor:  Colors.green.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor:primaryColor,
         elevation: 0,
         centerTitle: true,
         title: Text(
           "Add Medication",
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: primaryColor, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.green, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -268,7 +269,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -315,7 +316,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
@@ -324,7 +325,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: accentColor, size: 20),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Colors.green.shade50,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
@@ -347,7 +348,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Reminder Time", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
+        const Text("Reminder Time", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black87)),
         const SizedBox(height: 8),
         InkWell(
           onTap: () async {
@@ -383,7 +384,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Prescription Evidence", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
+        const Text("Prescription Evidence", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black87)),
         const SizedBox(height: 8),
         InkWell(
           onTap: pickImage,
@@ -421,7 +422,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       child: ElevatedButton(
         onPressed: isLoading ? null : saveMedication,
         style: ElevatedButton.styleFrom(
-          backgroundColor: accentColor,
+          backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),

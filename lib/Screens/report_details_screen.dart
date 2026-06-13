@@ -26,15 +26,15 @@ class ReportDetailsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.black54,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.green),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           "Alert Details",
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),

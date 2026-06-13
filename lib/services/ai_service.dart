@@ -36,17 +36,17 @@ class AIService {
   }
 
 //    for images to
-Future<String> analyzeImage(File image, String message) async{
+  Future<String> analyzeImage(File image, String message) async{
     final bytes = await image.readAsBytes();
     final response = await model.generateContent([
       Content.multi([
         TextPart(message.isEmpty
-        ? "What you showed in the image is it a medical drug?"
+            ? "What you showed in the image is it a medical drug?"
             : message),
         InlineDataPart('image/jpeg', bytes),
       ])
     ]);
     return response.text ?? "";
-}
+  }
 
 }
