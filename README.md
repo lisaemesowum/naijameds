@@ -45,3 +45,14 @@ NaijaMeds is a Flutter-based mobile application designed to improve access to sa
 - Push notifications for medication reminders
 - Offline drug database
 - Multi-language support
+
+## License
+
+Copyright (c) 2026 NaijaMeds. 
+
+This repository is public for portfolio display and educational review 
+purposes only. You may view the code, but you do not have permission to 
+copy, clone, redistribute, or use this project for your own work.
+
+No permission is granted to copy, distribute, modify, or use this software 
+for any purpose. This code is provided strictly for viewing.
